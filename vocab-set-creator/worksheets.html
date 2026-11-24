@@ -230,6 +230,10 @@ svg.trw{overflow:visible}:has(>svg.trw){overflow:hidden}
 }
 #printroot{display:none}
 .pic img{height:1em;width:auto;max-width:1.6em;object-fit:contain;vertical-align:middle;display:inline-block}
+/* set pictures used inside text (answer keys, teacher script): never bigger than the line */
+.sheet img.vi{height:1.4em;width:auto;max-width:2.2em;object-fit:contain;vertical-align:middle;display:inline-block}
+.sheet .tbl img.vi{height:calc(9mm*var(--pz,1));max-width:calc(14mm*var(--pz,1))}
+.sheet .pic img.vi{height:1em;max-width:1.6em}
 .live .mk{display:none}
 .live .page{padding:0}
 .live .frame{height:100dvh;min-height:0;border:0;border-radius:0}
@@ -597,7 +601,9 @@ function bodies(out,s,a=false){ // page bodies (without header); a = answer key 
  if(out.raw)return out.raw.map(f=>f(a));
  const cols=out.cols||1;return chunk(out.it,out.per).map(c=>itemsGrid(c,a,cols,out.per))}
 function keyBlock(keys,cols){return `<div class="keyg" style="grid-template-columns:repeat(${cols},1fr)">${keys.map((k,i)=>`<div><b>${i+1}</b><span class="a">${k}</span></div>`).join('')}</div>`}
-function scriptTable(say,s,pref){return `<table class="tbl"><thead><tr><th>#</th><th>🗣️ Say ×2 · wait 5 s</th><th>/IPA/</th><th>✅</th>${s.audio!=='script'?'<th>▦</th>':''}</tr></thead><tbody>${say.map((x,i)=>`<tr><td><b>${pref||''}${i+1}</b></td><td style="font-size:13pt;font-weight:700">${x[0]}</td><td class="ipa">/${x[1]}/</td><td style="color:#e11d48;font-weight:700">${x[2]}</td>${s.audio!=='script'?`<td>${qr(900+i,9)}</td>`:''}</tr>`).join('')}</tbody></table>`}
+// teacher script: split rows over as many pages as needed (a row never breaks across pages)
+function sayChunks(say,s){const h=dims(s)[1],img=say.some(x=>/<img/.test(x[2]||'')),rh=(img?13*(s.pz||100)/100:9.5)*Math.max(1,(s.tz||100)/100),out=[];let i=0,first=1;while(i<say.length||!out.length){const n=Math.max(3,Math.floor((h-(first?78:42))/Math.max(rh,s.audio!=='script'?12.5:8)));out.push({rows:say.slice(i,i+n),off:i});i+=n;first=0}return out}
+function scriptTable(say,s,pref,off=0){return `<table class="tbl"><thead><tr><th>#</th><th>🗣️ Say ×2 · wait 5 s</th><th>/IPA/</th><th>✅</th>${s.audio!=='script'?'<th>▦</th>':''}</tr></thead><tbody>${say.map((x,i)=>`<tr><td><b>${pref||''}${off+i+1}</b></td><td style="font-size:13pt;font-weight:700">${x[0]}</td><td class="ipa">/${x[1]}/</td><td style="color:#e11d48;font-weight:700">${x[2]}</td>${s.audio!=='script'?`<td>${qr(900+off+i,9)}</td>`:''}</tr>`).join('')}</tbody></table>`}
 function build(){applyData();const code=S.t,s=st();const pages=[];
  const nItems=setSize(code,s);
  const mkKey=(keys,title,extraTop)=>{const sp=sheetHTML(s,`<div class="hd1"><span class="cd" style="background:#e11d48">🔑</span><h3>Answer key · ${TM[code][1]}</h3><span class="brand"><i>b</i>Teacher</span></div>${extraTop||''}${keyBlock(keys,keys.length>12||s.orient==='l'?2:1)}`,'🔑 Answer key');return {lbl:'🔑 Answer key',...sp}};
@@ -617,7 +623,7 @@ function build(){applyData();const code=S.t,s=st();const pages=[];
   (out.extra||[]).forEach(([l,b])=>{const sp=sheetHTML(s,`<div class="mini"><span class="cd" style="background:${COL(TM[code][2])}">${code}</span>${l}</div>${b}`,l.split(' (')[0]);pages.push({lbl:l.split(' (')[0],...sp})});
   if(vi===vers.length-1||s.ab){
    if(s.key&&out.key&&!out.noKey){const kb=bodies(out,s,true);kb.forEach((b,i)=>{const sp=sheetHTML(s,`${head(code,s,v,i===0,1)}${b}`,`🔑 ${v?v+' · ':''}${i+1}/${kb.length}`,1);pages.push({lbl:`🔑 Answer key${v?' '+v:''} · ${i+1}/${kb.length}`,...sp})})}
-   if(usesAudio(code)&&out.say){const sp=sheetHTML(s,`<div class="hd1"><span class="cd" style="background:#0f766e">📜</span><h3>Teacher script · ${TM[code][1]}${v?' · '+v:''}</h3><span class="brand" style="flex-direction:column;align-items:flex-end;font-size:7.5pt">${s.audio!=='script'?qr(55+vi,16)+'▶ play all':''}</span></div><div class="ins" style="background:#e6f6f3"><b>🗣️</b> Say each item twice <span class="ar">→</span><b>⏳</b> wait 5 s <span class="ar">→</span><b>➡️</b> next${s.audio!=='script'?'<span class="tx">or scan ▦ to play the sound</span>':''}</div>${scriptTable(out.say,s)}`,'📜 Teacher script');pages.push({lbl:`📜 Teacher script${v?' '+v:''}`,...sp})}
+   if(usesAudio(code)&&out.say){const ch=sayChunks(out.say,s);ch.forEach((c,ci)=>{const pn=ch.length>1?` · ${ci+1}/${ch.length}`:'';const sp=sheetHTML(s,`${ci===0?`<div class="hd1"><span class="cd" style="background:#0f766e">📜</span><h3>Teacher script · ${TM[code][1]}${v?' · '+v:''}</h3><span class="brand" style="flex-direction:column;align-items:flex-end;font-size:7.5pt">${s.audio!=='script'?qr(55+vi,16)+'▶ play all':''}</span></div><div class="ins" style="background:#e6f6f3"><b>🗣️</b> Say each item twice <span class="ar">→</span><b>⏳</b> wait 5 s <span class="ar">→</span><b>➡️</b> next${s.audio!=='script'?'<span class="tx">or scan ▦ to play the sound</span>':''}</div>`:''}${scriptTable(c.rows,s,'',c.off)}`,'📜 Teacher script'+pn);pages.push({lbl:`📜 Teacher script${v?' '+v:''}${pn}`,...sp})})}
   }});
  return pages}
 // ---------- UI ----------
@@ -651,7 +657,7 @@ let PAGES=[];
 function preview(){const t=TM[S.t];PAGES=build();
  $('ph').innerHTML=`<span class="cd" style="background:${COL(t[2])}">${t[0]}</span><h2>${t[1]}</h2><span class="how">${t[3].map(([e,w])=>`${e} ${w}`).join(' → ')}</span><span class="pc">${PAGES.length} 📄</span>`;
  $('prev').innerHTML=PAGES.map((p,i)=>`<div class="pl"><i>${p.lbl}</i></div><div class="box" data-i="${i}">${p.html}</div>`).join('');
- fit();fitParts($('prev'));fitTrace($('prev'));drawLines($('prev'));
+ fit();fitParts($('prev'));fitSheets($('prev'));fitTrace($('prev'));drawLines($('prev'));
  const ov=[...document.querySelectorAll('#prev .it,#prev .card,#prev .wbk')].filter(x=>x.scrollHeight>x.clientHeight+12||x.scrollWidth>x.clientWidth+(x.classList.contains("wbk")?2:12)).length;
  if(ov)$('ph').insertAdjacentHTML('beforeend',`<span class="ovf" title="Some items do not fit">⚠️ ${ov} ไม่พอดีช่อง · ${S.t==='X'?'ลดขนาด ลดข้อต่อส่วน หรือ 1 ส่วนต่อหน้า':'ลดขนาด หรือลดข้อต่อหน้า'}</span>`);}
 function render(){const sb0=document.querySelector('#set .sb'),keep=S._lt===S.t,sbT=keep&&sb0?sb0.scrollTop:0,pvT=keep?$('prev').scrollTop:0,ae=document.activeElement,fk=ae&&ae.dataset?[ae.dataset.a,ae.dataset.k,ae.dataset.v]:null;S._lt=S.t;
@@ -665,13 +671,16 @@ function drawLines(root){root.querySelectorAll('.mln').forEach(c=>{const sv=c.qu
 function fitParts(root){root.querySelectorAll('.part').forEach(pt=>{const sh=pt.closest('.sheet');if(!sh)return;const tz=parseFloat(getComputedStyle(sh).getPropertyValue('--tz'))||1;const pic=(sh.style.getPropertyValue('--pic')||'15mm').trim();pt.style.removeProperty('--tz');pt.style.removeProperty('--pic');
  const bad=()=>pt.scrollHeight>pt.clientHeight+2||[...pt.querySelectorAll('.it,.card')].some(x=>x.scrollHeight>x.clientHeight+8||x.scrollWidth>x.clientWidth+8);
  let f=1;for(let k=0;k<3&&bad();k++){f*=0.88;pt.style.setProperty('--tz',(tz*f).toFixed(3));pt.style.setProperty('--pic',`calc(${pic} * ${f.toFixed(3)})`)}})}
+// every page: if anything still runs past the paper, shrink text + pictures + IPA a little until it fits
+function fitSheets(root){root.querySelectorAll('.sheet').forEach(sh=>{const inn=sh.querySelector('.in');if(!inn)return;const st=sh.style,o=sh._o||(sh._o={tz:+st.getPropertyValue('--tz')||1,pz:+st.getPropertyValue('--pz')||1,iz:+st.getPropertyValue('--iz')||1,pic:(st.getPropertyValue('--pic')||'15mm').trim()});st.setProperty('--tz',o.tz);st.setProperty('--pz',o.pz);st.setProperty('--iz',o.iz);st.setProperty('--pic',o.pic);
+ const bad=()=>inn.scrollHeight>inn.clientHeight+1;let f=1;for(let k=0;k<6&&bad();k++){f*=0.9;st.setProperty('--tz',(o.tz*f).toFixed(3));st.setProperty('--pz',(o.pz*f).toFixed(3));st.setProperty('--iz',(o.iz*f).toFixed(3));st.setProperty('--pic',`calc(${o.pic} * ${f.toFixed(3)})`)}})}
 function fitTrace(root){root.querySelectorAll('svg.trw').forEach(v=>{const W=v.clientWidth,H=v.clientHeight;if(!W||!H)return;const need=Math.max(+v.dataset.cw,140*W/H);v.setAttribute('viewBox',`0 0 ${need} 140`)})}
 function fit(){const pv=$('prev');const avail=pv.clientWidth-28;document.querySelectorAll('#prev .box').forEach(b=>{const p=PAGES[+b.dataset.i];const wpx=p.w*PX,hpx=p.h*PX;const sc=Math.min(1,avail/wpx);b.style.width=wpx*sc+'px';b.style.height=hpx*sc+'px';b.firstElementChild.style.transform=`scale(${sc})`})}
 /* Safari: refit only when the width really changes, once per frame (stops the resize loop) */
 let FIT_W=-1,FIT_R=0;new ResizeObserver(()=>{if(FIT_R)return;FIT_R=requestAnimationFrame(()=>{FIT_R=0;const w=$('prev').clientWidth;if(Math.abs(w-FIT_W)<2)return;FIT_W=w;fit()})}).observe($('prev'));
 function toast(m){const el=$('toast');el.textContent=m;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),2600)}
 function doPrint(){const s=st();const [w,h]=dims(s);let ps=document.getElementById('pgsz');if(!ps){ps=document.createElement('style');ps.id='pgsz';document.head.appendChild(ps)}
- ps.textContent=`@page{size:${w}mm ${h}mm;margin:0}`;$('printroot').innerHTML=PAGES.map(p=>p.html).join('');$('printroot').style.cssText='display:block;position:absolute;left:-99999px;top:0';fitParts($('printroot'));fitTrace($('printroot'));drawLines($('printroot'));$('printroot').style.cssText='';
+ ps.textContent=`@page{size:${w}mm ${h}mm;margin:0}`;$('printroot').innerHTML=PAGES.map(p=>p.html).join('');$('printroot').style.cssText='display:block;position:absolute;left:-99999px;top:0';fitParts($('printroot'));fitSheets($('printroot'));fitTrace($('printroot'));drawLines($('printroot'));$('printroot').style.cssText='';
  toast(`🖨️ ${PAGES.length} pages · ${s.paper} ${s.orient==='l'?'landscape':'portrait'} · scale 100% · margins none`);
  try{window.print()}catch(e){}}
 let slT=0;document.addEventListener('input',e=>{const el=e.target.closest('input[data-sl]');if(!el)return;const pp=el.dataset.p,s=pp?pst(pp):st();s[el.dataset.sl]=+el.value;const o=$('o-'+(pp?pp+'-':'')+el.dataset.sl);if(o)o.textContent=el.value+(el.dataset.u||'%');cancelAnimationFrame(slT);slT=requestAnimationFrame(()=>{preview();const sm=document.querySelector('#set .sum');if(sm)sm.textContent=sm.textContent.replace(/\d+ pages/,PAGES.length+' pages')})});
@@ -696,7 +705,7 @@ function applyDev(){const d=DEVS.find(x=>x[0]===S.dev);const f=$('frame');
  render()}
 const q=new URLSearchParams(location.search);if(q.get('t')&&TM[q.get('t')])S.t=q.get('t');if(q.get('dev')&&DEVS.some(d=>d[0]===q.get('dev')))S.dev=q.get('dev');if(q.get('open'))S.open=true;
 applyDev();
-if(document.fonts)document.fonts.ready.then(()=>{fit();fitParts($('prev'));fitTrace($('prev'));drawLines($('prev'))});
+if(document.fonts)document.fonts.ready.then(()=>{fit();fitParts($('prev'));fitSheets($('prev'));fitTrace($('prev'));drawLines($('prev'))});
 checkDotFonts().then(()=>{try{render()}catch(e){}});
 window.__WS={S,render,toast};
 });

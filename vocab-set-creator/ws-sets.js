@@ -9,7 +9,7 @@ function useSet(v){
  window.VSET=v;
  window.VTOPIC=(v.icon||'📚')+' '+v.name;
  // W rows = [word, picture (emoji or <img>), IPA] — same shape as the worksheet demo data
- window.VSET_W=v.words.filter(w=>w.w&&w.w.trim()).map(w=>[w.w.trim(),w.img?`<img src="${w.img}" alt="">`:(w.e||'🖼️'),w.ipa||'']);
+ window.VSET_W=v.words.filter(w=>w.w&&w.w.trim()).map(w=>[w.w.trim(),w.img?`<img class="vi" src="${w.img}" alt="">`:(w.e||'🖼️'),w.ipa||'']);
  const sen=VS.lines(v.sen),dlg=VS.lines(v.dlg),mtTh=v.mt==='th';
  // No sentences / dialogues yet → simple ones made from the words, so every quiz type still prints this topic
  window.VSET_SEN=sen.length?sen.join('\n'):v.words.slice(0,12).map(w=>`This is ${art(w.w)} [${w.w}]. | ${w.m?(mtTh?'นี่คือ'+w.m:w.m):''}`).join('\n');
