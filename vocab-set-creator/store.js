@@ -76,7 +76,27 @@ const C={st:ld(),state:'off',busy:null,t:null,again:false,firstP:null,
 {addEventListener('focus',()=>C.sync().catch(()=>{}));addEventListener('online',()=>C.sync().catch(()=>{}));
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)C.sync().catch(()=>{})});setInterval(()=>{if(!document.hidden)C.sync().catch(()=>{})},60000)}
 
+/* 💬 Talk wrong answers (Nana 24 Nov): "Question | Answer | wrong | wrong". Wrongs typed (or made by AI) come first;
+   then near-misses about the SAME answer so the job/topic name gives nothing away: a grammar slip, then a reply of the wrong type. Other lines' answers come last. */
+const NOT_V=new Set(['is','was','has','does','this','his','its','bus','yes','us','gas','glass','class','grass','dress','address','boss','kiss','miss','always','sometimes','plus','news','christmas','lens','tennis','bonus','virus','campus','status','famous','various','previous','less','unless','across','perhaps','please','clothes','glasses','scissors','trousers','jeans','shorts','pants','thanks','as','plus']);
+function slip(a){const t=String(a||'');const sub=(re,f)=>{const m=t.match(re);return m?t.slice(0,m.index)+f(m)+t.slice(m.index+m[0].length):''};
+ return sub(/\b(I|You|We|They) (like|have|want|live|go|work|eat|play|need|see|love|can see)\b/,m=>m[1]+' '+(m[2]==='have'?'has':m[2]==='go'?'goes':m[2]+'s'))||
+  sub(/\bdoesn['’]t\b/i,m=>"don't")||sub(/\bdon['’]t\b/i,()=>"doesn't")||
+  sub(/\b(is)\b/,()=>'are')||sub(/\b(are)\b/,()=>'is')||sub(/\b(am)\b/,()=>'is')||sub(/\b(was)\b/,()=>'were')||sub(/\b(were)\b/,()=>'was')||
+  sub(/\b(has)\b/,()=>'have')||sub(/\b(does)\b/,()=>'do')||
+  (()=>{const w=t.split(' ');for(let i=1;i<Math.min(w.length,5);i++){const x=w[i].replace(/[^a-z]/gi,''),lx=x.toLowerCase();if(/^(a|an|the|my|your|his|her|our|their|this|that|some|many|two|three)$/i.test(w[i-1])||x!==lx||lx.length<4||NOT_V.has(lx)||!/s$/.test(lx)||/ss$|us$|is$/.test(lx))continue;
+   const b=/ies$/.test(lx)?lx.slice(0,-3)+'y':/(ch|sh|x|o)es$/.test(lx)?lx.slice(0,-2):lx.slice(0,-1);w[i]=w[i].replace(x,b);return w.join(' ')}return ''})()||
+  sub(/\b(can|will|must|should) (\w+)\b/,m=>m[1]+' '+m[2]+(/s$/.test(m[2])?'':'s'))||sub(/\ban (?=[bcdfghjklmnpqrstvwxyz])/i,()=>'a ')||sub(/\ba (?=[aeiou])/i,()=>'an ')}
+function flip(a){const m=String(a||'').match(/^(Yes|No), (I|you|he|she|it|we|they) (\w+)(n['’]t)?\.?$/i);if(!m)return'';const v=m[3].toLowerCase(),neg={am:"I'm not",can:"can't",will:"won't",do:"don't",does:"doesn't",did:"didn't",is:"isn't",are:"aren't",was:"wasn't",were:"weren't",have:"haven't",has:"hasn't"};
+ if(/^yes$/i.test(m[1]))return v==='am'?"No, I'm not.":neg[v]?`No, ${m[2]} ${neg[v]}.`:'';return `Yes, ${m[2]} ${v.replace(/n['’]?t$/,'')==='ca'?'can':v.replace(/n['’]?t$/,'')}.`}
+const TYPE={where:['At seven o’clock.','Yes, they do.','Because it is fun.'],when:['In the kitchen.','Yes, I do.','A red one.'],who:['In the morning.','Yes, she is.','At the shop.'],what:['Yes, he does.','At nine o’clock.','In the park.'],which:['Yes, it is.','On Monday.','At school.'],why:['At home.','Yes, I can.','Two, please.'],how:['Yes, I do.','In the box.','On Sunday.'],howmany:['Yes, please.','In the box.','Very well.'],howmuch:['Yes, it is.','At the market.','Blue and green.'],whose:['In the morning.','Yes, it is.','At the bus stop.'],yn:['At the market.','In the evening.','Three, please.'],'':['Yes, I do.','At home.','In the morning.']};
+function qType(q){const w=String(q||'').toLowerCase().replace(/[^a-z ]/g,'').split(' ').filter(Boolean);if(!w.length)return'';if(w[0]==='how'&&(w[1]==='many'||w[1]==='much'))return 'how'+w[1];
+ if(TYPE[w[0]])return w[0];if(/^(do|does|did|is|are|am|was|were|can|could|will|would|have|has|should|may)$/.test(w[0]))return 'yn';return ''}
+function dlgWrongs(q,a,given,others,i){const A=String(a||'').trim(),low=x=>String(x||'').trim().toLowerCase(),out=[];const add=x=>{x=String(x||'').trim();if(x&&low(x)!==low(A)&&!out.some(y=>low(y)===low(x)))out.push(x)};
+ (given||[]).forEach(add);add(slip(A));add(flip(A));const T=TYPE[qType(q)]||TYPE[''];add(T[(i||0)%T.length]);add(T[((i||0)+1)%T.length]);(others||[]).forEach(add);return out}
+const dlgParse=l=>{const p=String(l||'').split('|').map(x=>x.trim());return {q:p[0]||'',a:p[1]||'',wr:p.slice(2).filter(Boolean)}};
 window.VS={
+ dlgWrongs,dlgParse,
  uid,
  all:()=>C.first().then(()=>allL()),
  get:id=>C.first().then(()=>getL(id)),
