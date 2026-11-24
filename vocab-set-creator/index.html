@@ -685,7 +685,7 @@ async function usIPA(){if(filling)return;if(SET.lang!=='en'){toast('American IPA
   toast(`🇺🇸 ${ch} IPA changed to American${miss.length?` · not found, kept: ${esc(miss.slice(0,5).join(', '))}${miss.length>5?'…':''}`:''}`,6000)}
  catch(e){toast('⚠️ '+esc(e.message),5000)}finally{filling=false}}
 let ipaBusy=false;
-async function fetchSenIPA(quiet){if(ipaBusy||SET.lang!=='en')return;const known=new Set(SET.words.map(w=>w.w.toLowerCase()));const ws=[...new Set(VS.lines(SET.sen).concat(VS.lines(SET.dlg)).flatMap(l=>l.split('|')[0].replace(/[\[\].?!,"“”;:]/g,'').toLowerCase().replace(/’/g,"'").split(/\s+/)).filter(w=>w&&!known.has(w)&&!SET.ipa[w]))];
+async function fetchSenIPA(quiet){if(ipaBusy||SET.lang!=='en')return;const known=new Set(SET.words.filter(w=>w.ipa).map(w=>w.w.toLowerCase()));const ws=[...new Set(VS.lines(SET.sen).concat(VS.lines(SET.dlg)).flatMap(l=>l.split('|')[0].replace(/[\[\].?!,"“”;:]/g,'').toLowerCase().replace(/’/g,"'").split(/\s+/)).filter(w=>w&&!known.has(w)&&!SET.ipa[w]))];
  if(!ws.length){if(!quiet)toast('✅ All sentence words have IPA');return}ipaBusy=true;const sid=SET.id;
  try{for(const w of ws.slice(0,300)){if(SET?.id!==sid)break;const ip=await freeIPA(w);if(ip)SET.ipa[w]=ip}
   const left=ws.filter(w=>!SET.ipa[w]);if(left.length&&hasKey()&&SET?.id===sid){const out=await gemJSON(`Give American IPA (Cambridge US style, no slashes, stress marks, syllable dots) for each English word. Return a JSON object word→ipa.\n${left.join('\n')}`);Object.entries(out||{}).forEach(([k,v])=>{if(v&&!SET.ipa[k.toLowerCase()])SET.ipa[k.toLowerCase()]=String(v).replace(/^\/|\/$/g,'')})}
