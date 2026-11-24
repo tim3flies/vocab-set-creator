@@ -408,7 +408,7 @@ const DLGT=TA('dlg','💬','Dialogues','1 บรรทัด = คำถาม |
 const SL=(k,ic,l,min,max,step,th,u)=>({k,ic,l,sl:[min,max,step],th,u:u||'%'});
 const SPEC={
  L1:{d:{per:8,ch:3,pic:'M',audio:'both'},c:[O('ch','🔢','Choices',[[2,'2'],[3,'3'],[4,'4']]),O('per','📑','Per page',[[6,'6'],[8,'8'],[10,'10']]),AUD]},
- L2:{d:{grid:12,label:0,audio:'script',items:10,orient:'l'},items:[[5,'5'],[8,'8'],[10,'10']],c:[O('grid','▦','Pictures',[[8,'8'],[12,'12'],[16,'16']]),TG('label','🔤','Word under picture','= เปลี่ยนเป็นฝึกอ่านด้วย'),AUD]},
+ L2:{d:{grid:12,label:0,audio:'script',items:'all',orient:'l'},items:[[5,'5'],[8,'8'],[10,'10'],['all','All']],c:[O('grid','▦','Pictures',[[8,'8'],[12,'12'],[16,'16']]),TG('label','🔤','Word under picture','= เปลี่ยนเป็นฝึกอ่านด้วย'),AUD]},
  L3:{d:{per:5,ans:'num',punct:1,audio:'script',items:5},c:[SENT,O('ans','✍️','Answer by',[['num','1️⃣ Number'],['write','✏️ Write'],['cut','✂️ Cut & glue']]),O('per','📑','Per page',[[4,'4'],[5,'5'],[6,'6']]),TG('punct','❗','Punctuation cards'),AUD]},
  S1:{d:{fmt:'cards',per:6,label:'none',back:1,chk:'partner',orient:'p'},c:[O('fmt','🃏','Format',[['cards','✂️ Flash cards'],['check','✅ Check sheet']]),O('per','📑','Per page',[[4,'4'],[6,'6'],[9,'9'],[12,'12']]),O('label','🔤','Under picture',[['none','—'],['word','word'],['ipa','word + IPA']]),TG('back','🔁','Back page: word + IPA','พิมพ์สองหน้า พลิกขอบยาว'),CHK]},
  S2:{d:{fmt:'half',ch:2,per:5,chk:'partner',orient:'l',items:5},c:[DLGT,O('fmt','✂️','Layout',[['half','🅰️|🅱️ Cut in half'],['sheet','📄 One sheet']]),O('ch','🔢','Choices',[[2,'2'],[3,'3']]),SL('per','📑','Per page',3,10,1,'ลาก 3–10',' ข้อ'),CHK]},
@@ -429,8 +429,8 @@ const SPEC={
  X:{d:{mix:['L1','R1','R5','W2'],sec:4,pack:2,audio:'script',noItems:1},c:[{k:'mix',ic:'🧩',l:'Parts (tap to add)',mix:1},SL('sec','#️⃣','Items per part',3,10,1,'ลาก 3–10',' ข้อ'),O('pack','📑','Parts per page',[[1,'1'],[2,'2']]),AUD,SENT,DLGT]},
 };
 const PICT=['L1','L2','S1','R1','R2','R3','R6','R7','R8','W1','W2','W4','W5','X'];
-const setSize=(c,s)=>(applyData(),{R7:r7Parse(S.sto,window.VSET_STOIMG).length,R6:SEN.length,L2:s.grid,L3:SEN.length,S2:DLG.length,R4:DLG.length,S3:SEN.length,R5:SEN.length,W3:SEN.length,W5:s.what==='letter'?LET.length:s.what==='sent'?SEN.length:W.length}[c]||W.length);
-const COMMON={paper:'A4',orient:'p',pz:100,tz:100,iz:100,font:'andika',items:10,head:1,key:1,bw:0,ab:0};
+const setSize=(c,s)=>(applyData(),{R7:r7Parse(S.sto,window.VSET_STOIMG).length,R6:SEN.length,L3:SEN.length,S2:DLG.length,R4:DLG.length,S3:SEN.length,R5:SEN.length,W3:SEN.length,W5:s.what==='letter'?LET.length:s.what==='sent'?SEN.length:W.length}[c]||W.length);
+const COMMON={sets:1,paper:'A4',orient:'p',pz:100,tz:100,iz:100,font:'andika',items:10,head:1,key:1,bw:0,ab:0};
 const S={t:'L1',set:{},dev:'auto',open:false,po:{}};
 // Custom (X): each ticked part keeps its own type settings (Nana 23 Nov). Keys X controls for all parts are left out.
 const XCAP={R7:1,R2:6,R4:5,R5:6,S3:5,L3:5,W3:6,R6:6,W5:4,S2:6,R3:8,S1:10};
@@ -469,11 +469,13 @@ R.L1=(s,n,r)=>{const it=[],key=[],say=[];for(let i=0;i<n;i++){const t=WI(i,5,2),
  it.push(a=>`<div class="it"><b class="no">${i+1}</b>${snd(s,i,7)}<div class="opts">${op.map((w,j)=>`<div class="op ${a&&j===k?'ok':''}">${P(w[1])}<i>${AB[j]}</i></div>`).join('')}</div></div>`);
  key.push(`${AB[k]} ${t[1]}`);say.push([t[0],t[2],AB[k]+' '+t[1]])}
  const cols=(s.ch===2||s.orient==='l')?2:1;return {it,key,say,per:s.per,cols}};
-R.L2=(s,n,r)=>{const g=shuf(W.concat(W).slice(0,s.grid),r);const order=shuf(g.map((_,i)=>i),r).slice(0,Math.min(n,s.grid));
- const cols=s.grid===8?4:s.grid===12?(s.orient==='l'?6:4):(s.orient==='l'?8:4);
- const num=gi=>{const k=order.indexOf(gi);return k<0?'':k+1};
- const body=a=>`<div class="items" style="grid-template-columns:repeat(${cols},1fr)">${g.map((w,gi)=>`<div class="it" style="flex-direction:column;justify-content:center;gap:4mm;padding:3mm 2mm">${P(w[1])}${s.label?`<span class="wd" style="font-size:calc(11pt*var(--tz))">${w[0]}</span>`:''}<span class="lb ${a?'k':''}" style="width:11mm;height:10mm;flex:none">${a?num(gi):''}</span></div>`).join('')}</div>${s.audio!=='script'?`<div style="display:flex;gap:2.5mm;flex-wrap:wrap;flex:none">${order.map((_,k)=>`<span style="display:flex;align-items:center;gap:1mm;font:800 9pt var(--ui)">${k+1}${qr(300+k,10)}</span>`).join('')}</div>`:''}`;
- return {raw:[body],key:order.map((gi,k)=>`${g[gi][1]} → ${k+1}`),say:order.map((gi,k)=>[`Number ${k+1}: ${g[gi][0]}`,g[gi][2],g[gi][1]])}};
+R.L2=(s,n,r)=>{const G=s.grid,all=shuf(W,r),pg=chunk(all,G);const last=pg[pg.length-1];for(let k=0;last.length<G&&k<all.length*2;k++){const w=all[k%all.length];if(pg.length>1||last.length<all.length?!last.includes(w):1)last.push(w)}
+ const cols=G===8?4:G===12?(s.orient==='l'?6:4):(s.orient==='l'?8:4);const key=[],say=[];let q=0;
+ const raw=pg.map((p,pi)=>{const real=pi<pg.length-1?p.length:Math.min(p.length,all.length-pi*G);const g=shuf(p.map((w,i)=>[w,i<real]),r);const cnt=s.items==='all'||!s.items?real:Math.min(+s.items,real);const order=shuf(g.map((x,i)=>x[1]?i:-1).filter(i=>i>=0),r).slice(0,cnt);const q0=q;q+=order.length;
+  order.forEach((gi,k)=>{key.push(`${g[gi][0][1]} → ${k+1}`);say.push([`${pg.length>1?`Page ${pi+1} · `:''}Number ${k+1}: ${g[gi][0][0]}`,g[gi][0][2],g[gi][0][1]])});
+  const num=gi=>{const k=order.indexOf(gi);return k<0?'':k+1};
+  return a=>`<div class="items" style="grid-template-columns:repeat(${cols},1fr)">${g.map(([w],gi)=>`<div class="it" style="flex-direction:column;justify-content:center;gap:4mm;padding:3mm 2mm">${P(w[1])}${s.label?`<span class="wd" style="font-size:calc(11pt*var(--tz))">${w[0]}</span>`:''}<span class="lb ${a?'k':''}" style="width:11mm;height:10mm;flex:none">${a?num(gi):''}</span></div>`).join('')}</div>${s.audio!=='script'?`<div style="display:flex;gap:2.5mm;flex-wrap:wrap;flex:none">${order.map((_,k)=>`<span style="display:flex;align-items:center;gap:1mm;font:800 9pt var(--ui)">${k+1}${qr(300+q0+k,10)}</span>`).join('')}</div>`:''}`});
+ return {raw,key,say}};
 R.L3=(s,n,r)=>{const it=[],key=[],say=[];for(let i=0;i<n;i++){const sn=SEN[i%SEN.length],tk=s.punct?words(sn[0]):sn[0].replace(/[.?!]/g,'').split(' ');const sh=shuf(tk.map((w,k)=>[w,k]),r);
  it.push(a=>`<div class="it" style="flex-direction:column;align-items:stretch;justify-content:center"><div style="display:flex;gap:3mm;align-items:center"><b class="no">${i+1}</b>${snd(s,i,11)}<div class="tiles">${sh.map(([w,k])=>`<span class="tile ${s.ans==='cut'?'cut':''}">${w}${s.ans==='num'?`<em>${a?k+1:''}</em>`:''}</span>`).join('')}</div></div>${s.ans==='write'?`<div class="hw" style="flex:none;height:calc(12mm*var(--tz));margin-left:10mm;position:relative">${a?`<span class="ans" style="position:absolute;left:2mm;bottom:22%;font:700 calc(13pt*var(--tz)) var(--kid);line-height:1">${sn[0]}</span>`:''}</div>`:s.ans==='cut'?`<div style="display:flex;gap:1.5mm;margin-left:10mm">${tk.map(()=>`<span style="flex:1;height:9mm;border:.3mm solid #bbb;border-radius:1.5mm;background:#f6f6f6"></span>`).join('')}</div>`:''}</div>`);
  key.push(sn[0]);say.push([sn[0],sn[1],''])}return {it,key,say,per:s.per,cols:1}};
@@ -618,7 +620,7 @@ const PX=3.7795;
 function dims(s){const [w,h]=DIM[s.paper];return s.orient==='l'?[h,w]:[w,h]}
 function head(code,s,ver,first,key){const t=TM[code];const c=COL(t[2]);const stamp=`<span class="kst">🔑 Answer key${ver?' · '+ver:''}</span>`;
  const how=t[3].map(([e,w])=>`<b>${e}</b><span>${w}</span>`).join('<span class="ar">→</span>');
- if(!first)return `<div class="mini"><span class="cd" style="background:${c}">${code}</span>${t[1]}${ver?` · Version ${ver}`:''}${key?`<span style="margin-left:auto">${stamp}</span>`:'<span style="margin-left:auto">Name ______________</span>'}</div>`;
+ if(!first)return `<div class="mini"><span class="cd" style="background:${c}">${code}</span>${t[1]}${ver?` · ${ver}`:''}${key?`<span style="margin-left:auto">${stamp}</span>`:'<span style="margin-left:auto">Name ______________</span>'}</div>`;
  return `<div class="hd"><div class="hd1"><span class="cd" style="background:${c}">${code}</span><h3>${t[1]}${ver?` <small style="font:700 calc(11pt*var(--tz)) var(--ui);color:#666">· ${ver}</small>`:''}</h3>${key?stamp:`<span class="brand"><i>b</i>Bokogo · ${escH(window.VTOPIC||'🍎 Fruits')}</span>`}</div>${s.head?`<div class="nm"><span>Name</span><span style="flex:.45">Class</span><span style="flex:.5">Date</span><span class="sc"><em>${key?`<b style="color:#e11d48;margin-right:auto">${s._n}</b>`:''}/ ${s._n}</em></span></div>`:''}<div class="ins" style="background:var(--${t[2]}b)">${how}<span class="tx">${t[4]}</span></div></div>`}
 function sheetHTML(s,inner,foot,key){const [w,h]=dims(s);const pz=(s.pz||100)/100,tz=(s.tz||100)/100,iz=(s.iz||100)/100,pic=(15*pz).toFixed(2)+'mm';const kf=(TFONT[s.font]||TFONT.andika)[0].replace(/"/g,"'");
  return {w,h,html:`<div class="sheet ${s.bw?'bw':''} ${key?'key':''}" style="width:${w}mm;height:${h}mm;--pic:${pic};--pz:${pz};--tz:${tz};--iz:${iz};--kid:${kf},'Sarabun',sans-serif"><div class="in">${inner}<div class="ft"><span>bokogo · Games › Create &amp; print</span><span>${foot}</span></div></div></div>`}}
@@ -632,24 +634,28 @@ function keyBlock(keys,cols){return `<div class="keyg" style="grid-template-colu
 // teacher script: split rows over as many pages as needed (a row never breaks across pages)
 function sayChunks(say,s){const h=dims(s)[1],img=say.some(x=>/<img/.test(x[2]||'')),rh=(img?13*(s.pz||100)/100:9.5)*Math.max(1,(s.tz||100)/100),out=[];let i=0,first=1;while(i<say.length||!out.length){const n=Math.max(3,Math.floor((h-(first?78:42))/Math.max(rh,s.audio!=='script'?12.5:8)));out.push({rows:say.slice(i,i+n),off:i});i+=n;first=0}return out}
 function scriptTable(say,s,pref,off=0){return `<table class="tbl"><thead><tr><th>#</th><th>🗣️ Say ×2 · wait 5 s</th><th>/IPA/</th><th>✅</th>${s.audio!=='script'?'<th>▦</th>':''}</tr></thead><tbody>${say.map((x,i)=>`<tr><td><b>${pref||''}${off+i+1}</b></td><td style="font-size:13pt;font-weight:700">${x[0]}</td><td class="ipa">/${x[1]}/</td><td style="color:#e11d48;font-weight:700">${x[2]}</td>${s.audio!=='script'?`<td>${qr(900+off+i,9)}</td>`:''}</tr>`).join('')}</tbody></table>`}
-function build(){applyData();const code=S.t,s=st();const pages=[];
+// Sets (Nana 24 Nov): every set uses every word again, in a new order (pictures, choices and grids reshuffle too)
+let SETBK=null;function setMix(K){if(!SETBK)SETBK=[W.slice(),SEN.slice(),DLG.slice()];const [w,se,dl]=SETBK;if(K>0){const r=rng(900+K*37);W.splice(0,W.length,...shuf(w,r));SEN.splice(0,SEN.length,...shuf(se,r));DLG.splice(0,DLG.length,...shuf(dl,r))}}
+function setDone(){if(!SETBK)return;const [w,se,dl]=SETBK;W.splice(0,W.length,...w);SEN.splice(0,SEN.length,...se);DLG.splice(0,DLG.length,...dl);SETBK=null}
+function build(){applyData();setDone();try{return build0()}finally{setDone()}}
+function build0(){const code=S.t,s=st();const pages=[];const NS=Math.max(1,Math.min(5,+s.sets||1));
  const nItems=setSize(code,s);
  const mkKey=(keys,title,extraTop)=>{const sp=sheetHTML(s,`<div class="hd1"><span class="cd" style="background:#e11d48">🔑</span><h3>Answer key · ${TM[code][1]}</h3><span class="brand"><i>b</i>Teacher</span></div>${extraTop||''}${keyBlock(keys,keys.length>12||s.orient==='l'?2:1)}`,'🔑 Answer key');return {lbl:'🔑 Answer key',...sp}};
- if(code==='X'){const parts=s.mix.length?s.mix:['L1'];const outs=parts.map((c,pi)=>{const ds={...COMMON,...SPEC[c].d,...pst(c),paper:s.paper,orient:s.orient,bw:s.bw,pz:s.pz,tz:s.tz,font:s.font,audio:s.audio,per:xPer(c,s),items:s.sec,pairs:Math.max(5,Math.min(s.sec,8)),grid:c==='L2'?8:SPEC[c].d.grid,inX:1};const o=R[c](ds,s.sec,rng(41+pi));return {c,ds,o}});
+ if(code==='X'){for(let K=0;K<NS;K++){setMix(K);const SP=NS>1?`Set ${K+1} · `:'';const parts=s.mix.length?s.mix:['L1'];const outs=parts.map((c,pi)=>{const ds={...COMMON,...SPEC[c].d,...pst(c),paper:s.paper,orient:s.orient,bw:s.bw,pz:s.pz,tz:s.tz,font:s.font,audio:s.audio,per:xPer(c,s),items:s.sec,pairs:Math.max(5,Math.min(s.sec,8)),grid:c==='L2'?8:SPEC[c].d.grid,inX:1};const o=R[c](ds,s.sec,rng(41+pi+K*131));return {c,ds,o}});
   // a part with more items than fit in one block continues in the next block: Part 2 · R4 (1/2), (2/2)
   const segs=outs.flatMap((x,pi)=>{const n=x.o.pagesRaw?x.o.pagesRaw.length:x.o.raw?x.o.raw.length:Math.ceil(Math.min(x.o.it.length,s.sec)/x.ds.per);const m=Math.max(1,n);return Array.from({length:m},(_,k)=>[x,pi,k,m])});
   const total=outs.reduce((a,x)=>a+(x.o.key||[]).length,0);s._n=total;
   const partHTML=({c,ds,o},pi,a=false,k=0,m=1)=>{const t=TM[c];const b=o.pagesRaw?pg(o.pagesRaw[k],a):o.raw?o.raw[k](a):itemsGrid(o.it.slice(k*ds.per,Math.min((k+1)*ds.per,s.sec)),a,ds.per>6&&!['R4','R5','S2','S3','L3','W3','R6','W4','W5'].includes(c)?2:Math.min(o.cols||1,2),ds.per);const PW={R7:2.4,R6:1.5,R5:1.8,W3:1.8,L3:1.6,W4:1.8,W5:1.5,S2:1.3,R4:1.3,S3:1.3};return `<div class="part" style="flex:${PW[c]||1} 1 0"><div class="secT"><span class="cd" style="background:${COL(t[2])}">Part ${pi+1} · ${c}${m>1?` (${k+1}/${m})`:''}</span>${t[3].map(x=>x[0]).join(' ')} ${t[4]}</div>${b}</div>`};
   const groups=chunk(segs,s.pack);
-  groups.forEach((g,gi)=>{const sp=sheetHTML(s,`${head('X',s,'',gi===0)}${g.map(([x,i,k,m])=>partHTML(x,i,false,k,m)).join('')}`,`👤 ${gi+1}/${groups.length}`);pages.push({lbl:`👤 Student · ${gi+1}/${groups.length}`,...sp})});
-  if(s.key)groups.forEach((g,gi)=>{const sp=sheetHTML(s,`${head('X',s,'',gi===0,1)}${g.map(([x,i,k,m])=>partHTML(x,i,true,k,m)).join('')}`,`🔑 ${gi+1}/${groups.length}`,1);pages.push({lbl:`🔑 Answer key · ${gi+1}/${groups.length}`,...sp})});
-  const sayP=outs.filter(x=>usesAudio(x.c)&&x.o.say);if(sayP.length){const sp=sheetHTML(s,`<div class="hd1"><span class="cd" style="background:#0f766e">📜</span><h3>Teacher script</h3><span class="brand">${s.audio!=='script'?qr(77,16):''}</span></div>${sayP.map(x=>`<div class="secT">Part ${outs.indexOf(x)+1} · ${x.c}</div>${scriptTable(x.o.say,s)}`).join('')}`,'📜 Teacher script');pages.push({lbl:'📜 Teacher script',...sp})}
+  groups.forEach((g,gi)=>{const sp=sheetHTML(s,`${head('X',s,SP.slice(0,-3),gi===0)}${g.map(([x,i,k,m])=>partHTML(x,i,false,k,m)).join('')}`,`👤 ${gi+1}/${groups.length}`);pages.push({lbl:`👤 Student · ${SP}${gi+1}/${groups.length}`,...sp})});
+  if(s.key)groups.forEach((g,gi)=>{const sp=sheetHTML(s,`${head('X',s,SP.slice(0,-3),gi===0,1)}${g.map(([x,i,k,m])=>partHTML(x,i,true,k,m)).join('')}`,`🔑 ${gi+1}/${groups.length}`,1);pages.push({lbl:`🔑 Answer key · ${SP}${gi+1}/${groups.length}`,...sp})});
+  const sayP=outs.filter(x=>usesAudio(x.c)&&x.o.say);if(sayP.length){const sp=sheetHTML(s,`<div class="hd1"><span class="cd" style="background:#0f766e">📜</span><h3>Teacher script</h3><span class="brand">${s.audio!=='script'?qr(77,16):''}</span></div>${sayP.map(x=>`<div class="secT">Part ${outs.indexOf(x)+1} · ${x.c}</div>${scriptTable(x.o.say,s)}`).join('')}`,'📜 Teacher script');pages.push({lbl:'📜 Teacher script'+(SP?' · '+SP.slice(0,-3):''),...sp})}}
   return pages}
- const vers=s.ab?['A','B']:[''];
- vers.forEach((v,vi)=>{const r=rng(17+vi*101+code.charCodeAt(0));const out=R[code](s,nItems,r);s._n=(out.key||[]).length;
+ const vers=[];for(let K=0;K<NS;K++)(s.ab?['A','B']:['']).forEach(x=>vers.push([K,[NS>1?`Set ${K+1}`:'',x?`Version ${x}`:''].filter(Boolean).join(' · ')]));
+ vers.forEach(([K,v],vi)=>{setMix(K);const r=rng(17+vi*101+code.charCodeAt(0));const out=R[code](s,nItems,r);s._n=(out.key||[]).length;
   const bs=bodies(out,s);bs.forEach((b,i)=>{const sp=sheetHTML(s,`${head(code,s,v,i===0)}${b}`,`👤 ${v?v+' · ':''}${i+1}/${bs.length}`);pages.push({lbl:`👤 Student${v?' '+v:''} · ${i+1}/${bs.length}`,...sp})});
   (out.extra||[]).forEach(([l,b])=>{const sp=sheetHTML(s,`<div class="mini"><span class="cd" style="background:${COL(TM[code][2])}">${code}</span>${l}</div>${b}`,l.split(' (')[0]);pages.push({lbl:l.split(' (')[0],...sp})});
-  if(vi===vers.length-1||s.ab){
+  {
    if(s.key&&out.key&&!out.noKey){const kb=bodies(out,s,true);kb.forEach((b,i)=>{const sp=sheetHTML(s,`${head(code,s,v,i===0,1)}${b}`,`🔑 ${v?v+' · ':''}${i+1}/${kb.length}`,1);pages.push({lbl:`🔑 Answer key${v?' '+v:''} · ${i+1}/${kb.length}`,...sp})})}
    if(usesAudio(code)&&out.say){const ch=sayChunks(out.say,s);ch.forEach((c,ci)=>{const pn=ch.length>1?` · ${ci+1}/${ch.length}`:'';const sp=sheetHTML(s,`${ci===0?`<div class="hd1"><span class="cd" style="background:#0f766e">📜</span><h3>Teacher script · ${TM[code][1]}${v?' · '+v:''}</h3><span class="brand" style="flex-direction:column;align-items:flex-end;font-size:7.5pt">${s.audio!=='script'?qr(55+vi,16)+'▶ play all':''}</span></div><div class="ins" style="background:#e6f6f3"><b>🗣️</b> Say each item twice <span class="ar">→</span><b>⏳</b> wait 5 s <span class="ar">→</span><b>➡️</b> next${s.audio!=='script'?'<span class="tx">or scan ▦ to play the sound</span>':''}</div>`:''}${scriptTable(c.rows,s,'',c.off)}`,'📜 Teacher script'+pn);pages.push({lbl:`📜 Teacher script${v?' '+v:''}${pn}`,...sp})})}
   }});
@@ -672,11 +678,12 @@ function settings(pages){const s=st(),t=TM[S.t],sp=SPEC[S.t];
  const itemsOpt=sp.items||[[5,'5'],[10,'10'],[15,'15'],[20,'20']];
  const common=[O('paper','📄','Paper',[['A4','A4'],['Letter','Letter']]),O('orient','🔄','Orientation',[['p','▯ Portrait'],['l','▭ Landscape']])];
 
+ const SETS=O('sets','📚','Sets',[[1,'1'],[2,'2'],[3,'3'],[4,'4'],[5,'5']],'each set = every word, new order');
  const tail=[TG('head','🪪','Name · class · date · score'),...(['S3','W5'].includes(S.t)?[]:[TG('key','🔑','Answer key','= ใบงานเดียวกัน เติมคำตอบสีแดง')]),TG('bw','⚫','Black & white (ink saver)'),...(S.t!=='X'?[TG('ab','🔀','Version A + B','สลับลำดับ กันลอกกัน')]:[])];
  const nS=pages.filter(p=>p.lbl.startsWith('👤')).length;
  $('set').innerHTML=`<div class="sh"><b>⚙️ ${S.t} settings</b><button class="x" data-a="sheet" aria-label="Close">✕</button></div><div class="sb">
  <div class="note" style="background:var(--${t[2]}b)"><b>📄 On paper</b>${t[5]}</div>
- <div class="sec">${t[0]} · ${t[1]}</div>${S.t!=='X'&&!['R3','W4','L2','R8'].includes(S.t)?`<div class="note" style="background:var(--s2);font-size:12.5px">📚 ใช้ทุกคำในชุด (${setSize(S.t,s)}) · เลือกจำนวนข้อต่อหน้า ระบบแบ่งหน้าให้เอง</div>`:''}${sp.c.map(c=>ctl(c,s)).join('')}${S.t==='X'?partSets(s):''}
+ <div class="sec">${t[0]} · ${t[1]}</div>${ctl(SETS,s)}<div class="note" style="background:var(--s2);font-size:12.5px">📚 ${S.t==='X'?'Each set repeats every part with new words and order.':`Each set uses all ${setSize(S.t,s)} ${['L3','S3','R5','R6','W3'].includes(S.t)||(S.t==='W5'&&s.what==='sent')?'sentences':['S2','R4'].includes(S.t)?'dialogues':S.t==='R7'?'stories':'words'} once, in a new order.`} ${(+s.sets||1)>1?`<b>${+s.sets} sets</b> = every item ${+s.sets} times.`:'Pick more sets for extra practice.'}</div>${sp.c.map(c=>ctl(c,s)).join('')}${S.t==='X'?partSets(s):''}
  <div class="sec">Size</div>${S.t!=='W5'?ctl(FONTC,s):''}${PICT.includes(S.t)?ctl(SL('pz','🖼️','Picture size',50,200,10,'ลากเพื่อปรับ'),s):''}${ctl(SL('tz','🔠','Text size',70,160,5,S.t==='W5'?'= ความสูงบรรทัด':'ลากเพื่อปรับ'),s)}${ctl(SL('iz','🗣️','IPA size',70,250,10,'/ˈaɪ.piː.eɪ/ ลากเพื่อปรับ'),s)}
  <div class="sec">Page</div>${common.map(c=>ctl(c,s)).join('')}${tail.map(c=>ctl(c,s)).join('')}
  </div><div class="sf"><span class="sum">${S.t==='X'?'':`📚 ${s._n} from ${escH(window.VTOPIC||'🍎 Fruits')} · `}${pages.length} pages · ${nS} for each student${pages.length>nS?` · ${pages.length-nS} for teacher`:''}</span><button class="bigpr" data-a="print">🖨️ Print · ${s.paper} ${s.orient==='l'?'▭':'▯'}</button></div>`;
