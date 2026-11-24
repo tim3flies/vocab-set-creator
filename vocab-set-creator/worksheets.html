@@ -427,7 +427,7 @@ const SPEC={
  X:{d:{mix:['L1','R1','R5','W2'],sec:4,pack:2,audio:'script',noItems:1},c:[{k:'mix',ic:'🧩',l:'Parts (tap to add)',mix:1},SL('sec','#️⃣','Items per part',3,10,1,'ลาก 3–10',' ข้อ'),O('pack','📑','Parts per page',[[1,'1'],[2,'2']]),AUD,SENT,DLGT]},
 };
 const PICT=['L1','L2','S1','R1','R2','R3','R6','R7','W1','W2','W4','W5','X'];
-const setSize=(c,s)=>(applyData(),{R7:r7Parse(S.sto).length,R6:SEN.length,L2:s.grid,L3:SEN.length,S2:DLG.length,R4:DLG.length,S3:SEN.length,R5:SEN.length,W3:SEN.length,W5:s.what==='letter'?LET.length:s.what==='sent'?SEN.length:W.length}[c]||W.length);
+const setSize=(c,s)=>(applyData(),{R7:r7Parse(S.sto,window.VSET_STOIMG).length,R6:SEN.length,L2:s.grid,L3:SEN.length,S2:DLG.length,R4:DLG.length,S3:SEN.length,R5:SEN.length,W3:SEN.length,W5:s.what==='letter'?LET.length:s.what==='sent'?SEN.length:W.length}[c]||W.length);
 const COMMON={paper:'A4',orient:'p',pz:100,tz:100,iz:100,font:'andika',items:10,head:1,key:1,bw:0,ab:0};
 const S={t:'L1',set:{},dev:'auto',open:false,po:{}};
 // Custom (X): each ticked part keeps its own type settings (Nana 23 Nov). Keys X controls for all parts are left out.
@@ -523,7 +523,7 @@ R.W1=(s,n,r)=>{const it=[],key=[];for(let i=0;i<n;i++){const t=WI(i,3,5);const A
 
 // ---------- R7 Picture Story (Nana 23 Nov): same stories + scene pictures as the R7 game ----------
 
-R.R7=(s,_,r)=>{const all=r7Parse(S.sto);const pool=[...new Set(all.flatMap(x=>x.qs).filter(q=>!/^(yes|no)$/i.test(q.acc[0]||'')).map(q=>q.acc[0]))];
+R.R7=(s,_,r)=>{const all=r7Parse(S.sto,window.VSET_STOIMG);const pool=[...new Set(all.flatMap(x=>x.qs).filter(q=>!/^(yes|no)$/i.test(q.acc[0]||'')).map(q=>q.acc[0]))];
  const cap=t=>t?t[0].toUpperCase()+t.slice(1):t;let qn=0;const key=[],say=[];
  const blocks=all.map((st,si)=>{const qs=st.qs.map(q=>{const yn=/^(yes|no)$/i.test(q.acc[0]||'');const wh=q.q.toLowerCase().split(' ').slice(0,2).join(' ').replace(/'s$|’s$/,'');const same=all.flatMap(x=>x.qs).filter(o=>o!==q&&o.q.toLowerCase().replace(/'s|’s/g,'').startsWith(wh.split(' ')[0])).map(o=>o.acc[0]);const other=pool.filter(x=>!same.includes(x));const ds=[...shuf(same,r),...shuf(other,r)].filter((x,i,a)=>x.toLowerCase()!==q.acc[0].toLowerCase()&&a.indexOf(x)===i);const op=yn?['Yes','No']:shuf([q.acc[0],...ds.slice(0,(s.ch||3)-1)],r).map(cap);return {...q,no:++qn,yn,op,k:yn?(q.acc[0].toLowerCase()==='yes'?0:1):op.findIndex(o=>o.toLowerCase()===q.acc[0].toLowerCase())}});
   qs.forEach(q=>key.push(`${q.no}. ${q.full}`));st.sents.forEach((x,i)=>say.push([`Story ${si+1} · ${x}`,'',i===0?'':'']));return {st,qs,si}});
@@ -710,6 +710,7 @@ checkDotFonts().then(()=>{try{render()}catch(e){}});
 window.__WS={S,render,toast};
 });
 </script>
+<script src="stories.js"></script>
 <script src="ws-sets.js"></script>
 </body>
 </html>

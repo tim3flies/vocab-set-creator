@@ -1,5 +1,6 @@
 /* Bokogo Vocab Sets · shared storage (IndexedDB on this device). Used by index.html (creator) and worksheets.html (print).
-   One set = {id,name,icon,lang,mt,words:[{id,w,ipa,m,e,img}],sen,dlg,sto,ipa:{},created,updated}
+   One set = {id,name,icon,lang,mt,words:[{id,w,ipa,m,e,img}],sen,dlg,sto,stories,ipa:{},created,updated}
+   stories = [{id,title,pic:{img|scn,orig},text,qs:[{q,ok:[],full}],tr:{<lang>:{title,text,qs:[],by:'ai'|'me',ok}}}] · sto = the same stories as R7 text (kept for worksheets)
    sen: "English | meaning" per line ([word] = blank for R6) · dlg: "Question | Answer" per line · sto: R7 story blocks · ipa: extra word→IPA for sentence words */
 /* Page error reporter: shows a small red bar and sends the error to english.learn8.co (logs/client.log) so it can be fixed. */
 (function(){const H=location.hostname,API=/(^|\.)learn8\.co$/.test(H)?'/api/':'https://english.learn8.co/api/';let n=0;
@@ -36,8 +37,11 @@ const C={st:ld(),state:'off',busy:null,t:null,again:false,firstP:null,
   const r=await fetch(API+'?a='+a+(q||''),o);let j={};try{j=await r.json()}catch(e){}
   if(r.status===401&&this.st.tok&&a!=='login'){this.st={};this.sv();this.emit({state:'off',signedOut:true})}
   if(!r.ok)throw new Error(j.error||('Server error '+r.status));return j},
- async signin(name,pass){const j=await this.req('login',{name,pass});this.st={tok:j.tok,name:j.name,since:0,done:{},dels:[]};this.sv();this.emit({state:'on'});await this.sync();return j},
- async register(name,pass,invite){const j=await this.req('register',{name,pass,invite});this.st={tok:j.tok,name:j.name,since:0,done:{},dels:[]};this.sv();this.emit({state:'on'});await this.sync();return j},
+ async signin(name,pass){const j=await this.req('login',{name,pass});this.st={tok:j.tok,name:j.name,mother:j.mother||'th',learning:j.learning||'en',since:0,done:{},dels:[]};this.sv();this.emit({state:'on'});await this.sync();return j},
+ async register(name,pass,invite,mother,learning){const j=await this.req('register',{name,pass,invite,mother,learning});this.st={tok:j.tok,name:j.name,mother:j.mother||mother||'th',learning:j.learning||learning||'en',since:0,done:{},dels:[]};this.sv();this.emit({state:'on'});await this.sync();return j},
+ async prefs(p){const j=await this.req('prefs',p);this.st.mother=j.mother;this.st.learning=j.learning;this.sv();this.emit({prefs:j});return j},
+ pics(q,mine,kind){return this.req('pics',null,'&q='+encodeURIComponent(q||'')+(mine?'&mine=1':'')+(kind?'&kind='+kind:''))},
+ pic(img,name,kind){return this.req('pic',{img,name:name||{},kind:kind||'scene'})},
  all(q){return this.req('all',null,'&q='+encodeURIComponent(q||''))},
  shared(u,id){return this.req('get',null,'&u='+(+u)+'&id='+encodeURIComponent(id))},
  async signout(){try{await this.req('logout',{})}catch(e){}this.st={};this.sv();this.emit({state:'off'})},

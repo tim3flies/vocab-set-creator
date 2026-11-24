@@ -10,6 +10,9 @@ function useSet(v){
  window.VTOPIC=(v.icon||'📚')+' '+v.name;
  // W rows = [word, picture (emoji or <img>), IPA] — same shape as the worksheet demo data
  window.VSET_W=v.words.filter(w=>w.w&&w.w.trim()).map(w=>[w.w.trim(),w.img?`<img class="vi" src="${w.img}" alt="">`:(w.e||'🖼️'),w.ipa||'']);
+ // 📖 story cards (stories.js): their pictures go to R7 by story order
+ if(Array.isArray(v.stories)&&window.STO){v.sto=window.STO.toSto(v.stories);v._stoGen=v.sto}
+ window.VSET_STOIMG=(v.stories||[]).map(x=>x&&x.pic&&x.pic.img||'');
  const sen=VS.lines(v.sen),dlg=VS.lines(v.dlg),mtTh=v.mt==='th';
  // No sentences / dialogues yet → simple ones made from the words, so every quiz type still prints this topic
  window.VSET_SEN=sen.length?sen.join('\n'):v.words.slice(0,12).map(w=>`This is ${art(w.w)} [${w.w}]. | ${w.m?(mtTh?'นี่คือ'+w.m:w.m):''}`).join('\n');
