@@ -120,7 +120,7 @@ input,select,textarea{font-size:16px}
 .fx{flex:1;min-width:0;display:flex;align-items:center;background:var(--s2);border-radius:8px;padding-left:6px}
 .fx>span{flex:none;color:var(--muted);font-size:13px}
 .fx .fi{height:30px;font-size:14px}
-.fx.ipa .fi{font-family:'Andika','Lucida Sans Unicode','Arial Unicode MS',sans-serif;color:#0f766e}
+.fx.ipa .fi{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-weight:400;color:#0f766e}
 .fx.miss{background:#fff7e6}
 .acs{display:flex;flex-direction:column;gap:4px}
 .mini{width:38px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--paper);font-size:16px;font-family:var(--emo);padding:0}
@@ -150,7 +150,7 @@ body.dragging .dropzone{display:block}
 .pvr .en .bl{border-bottom:2px solid var(--p7);color:var(--p7);font-weight:700;padding:0 4px}
 .pvr .th{color:var(--muted);font-size:14px}
 .pvr .th.miss{color:#b45309}
-.pvr .ip{color:#0f766e;font-size:13px;font-family:'Andika',sans-serif}
+.pvr .ip{color:#0f766e;font-size:13px;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-weight:400}
 .story{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
 .story .st{font-family:var(--kid);font-size:15.5px;margin-bottom:6px}
 .story .q{font-size:14px;padding:3px 0;border-top:1px dashed var(--line)}
@@ -466,7 +466,7 @@ function renderPane(){renderTools();$('addbar').hidden=TAB!=='w';const P=$('pane
   <div class="wl" id="wl">${SET.words.map((w,i)=>rowHTML(w,i)).join('')}</div>
   ${SET.words.length?'':`<div class="empty" style="margin-top:6px"><div class="big">🔤</div><p>Type a word below and press ＋.<br>Paste many lines at once, or <code>word | meaning</code>.</p><div class="row"><button class="ib" data-a="paste">📋 Paste list</button><button class="ib" data-a="aiwords">✨ AI word list</button></div></div>`}`}
  else if(TAB==='s')P.innerHTML=txHTML('sen',`One sentence per line: <code>English sentence | meaning</code><br>For <b>R6 Fill the Blank</b>, put the blank word in brackets: <code>I like [apples]. | ฉันชอบแอปเปิล</code>`,`I like apples. | ฉันชอบแอปเปิล\nThe [mango] is sweet. | มะม่วงหวาน`)+`<div class="pv" id="pv"></div>`;
- else if(TAB==='d')P.innerHTML=txHTML('dlg',`One dialogue per line: <code>Question | Answer | wrong | wrong</code> (wrongs optional). Used by <b>S2 Talk Back</b> and <b>R4 Best Reply</b>. Best wrongs talk about the <b>same</b> thing: a wrong fact, a grammar slip or a reply of the wrong type. With no wrongs, the worksheet makes a grammar slip and a wrong-type reply for you (grey ✗ below).`,`Where does a cleaner work? | A cleaner works in a hotel. | A cleaner works on a bus. | Yes, he does.\nIs the banana yellow? | Yes, it is.`)+`<div class="pv" id="pv"></div>`;
+ else if(TAB==='d')P.innerHTML=txHTML('dlg',`One dialogue per line: <code>Question | Answer | wrong | wrong</code> (wrongs optional). Used by <b>S2 Talk Back</b> and <b>R4 Best Reply</b>. Best wrongs are 100% correct English about the <b>same</b> thing, wrong only in meaning (wrong place, action, tool or role). With no wrongs, the worksheet swaps a set word in the answer or flips Yes/No, else uses other answers (grey ✗ below). ✨ buttons use the ESL prompt.`,`Where does a chef work? | A chef works in a kitchen. | A chef works in a garage. | A chef works in a classroom.\nIs the banana yellow? | Yes, it is.`)+`<div class="pv" id="pv"></div>`;
  else STO.render(P);
  if(TAB==='s'||TAB==='d')renderPv()}
 function rowHTML(w,i){const mt=LG(SET.mt);return`<div class="wr" data-i="${i}"><button class="pk ${w.img||w.e?'has':''}" data-a="pic" title="Picture">${picHTML(w)}${w.ai?'<i class="ai">✨</i>':''}</button>
@@ -477,7 +477,7 @@ function hiWords(t){const ws=SET.words.map(w=>w.w.toLowerCase()).filter(Boolean)
 function senIPA(en){return en.replace(/\[([^\]]+)\]/g,'$1').replace(/[.?!,"“”]/g,'').split(/\s+/).filter(Boolean).map(w=>{const l=w.toLowerCase().replace(/’/g,"'");const x=SET.words.find(v=>v.w.toLowerCase()===l);return (x&&x.ipa)||SET.ipa[l]||'…'}).join(' ')}
 function renderPv(){const pv=$('pv');if(!pv)return;
  if(TAB==='s'){const L=VS.lines(SET.sen);pv.innerHTML=L.length?`<div class="cntline"><b>${L.length} sentences</b>${L.length>24?'<span class="badge warn">worksheets use the first 24</span>':''}${L.some(l=>!l.includes('|'))?`<span class="badge warn">${L.filter(l=>!l.includes('|')).length} without meaning</span>`:''}</div>`+L.map((l,i)=>{const [en,th]=l.split('|').map(x=>(x||'').trim());return`<div class="pvr"><span class="no">${i+1}</span><div><div class="en">${hiWords(en)}</div><div class="ip">/${esc(senIPA(en))}/</div></div><div class="th ${th?'':'miss'}">${th?esc(th):'— meaning?'}</div><button class="mini" data-say="${esc(en.replace(/[\[\]]/g,''))}">🔊</button></div>`}).join(''):''}
- else if(TAB==='d'){const L=VS.lines(SET.dlg),D=L.map(VS.dlgParse);pv.innerHTML=D.map(({q,a,wr},i)=>{const oth=D.filter((e,j)=>j!==i&&e.a&&e.a!==a).map(e=>e.a),ws=a?VS.dlgWrongs(q,a,wr,oth,i).slice(0,3):[];return`<div class="pvr"><span class="no">${i+1}</span><div class="en">🅰️ ${hiWords(q)}</div><div class="en">${a?'🅱️ '+hiWords(a):'<span class="th miss">— answer?</span>'}${ws.length?`<div class="th" style="font-size:12.5px;font-family:system-ui,sans-serif;margin-top:3px;line-height:1.35">${ws.map((w,k)=>`<div style="${k<wr.length?'color:#b42318':'color:#94a3b8'}">✗ ${esc(w)}</div>`).join('')}</div>`:''}</div><button class="mini" data-say="${esc(q+' '+(a||''))}">🔊</button></div>`}).join('')}
+ else if(TAB==='d'){const L=VS.lines(SET.dlg),D=L.map(VS.dlgParse);pv.innerHTML=D.map(({q,a,wr},i)=>{const oth=D.filter((e,j)=>j!==i&&e.a&&e.a!==a).map(e=>({q:e.q,a:e.a})),ws=a?VS.dlgWrongs(q,a,wr,oth,i,SET.words.map(w=>w.w)).slice(0,3):[];return`<div class="pvr"><span class="no">${i+1}</span><div class="en">🅰️ ${hiWords(q)}</div><div class="en">${a?'🅱️ '+hiWords(a):'<span class="th miss">— answer?</span>'}${ws.length?`<div class="th" style="font-size:12.5px;font-family:system-ui,sans-serif;margin-top:3px;line-height:1.35">${ws.map((w,k)=>`<div style="${k<wr.length?'color:#b42318':'color:#94a3b8'}">✗ ${esc(w)}</div>`).join('')}</div>`:''}</div><button class="mini" data-say="${esc(q+' '+(a||''))}">🔊</button></div>`}).join('')}
  else{const B=String(SET.sto||'').split(/\n\s*\n/).filter(b=>b.trim());pv.innerHTML=B.map((b,i)=>{const ls=b.split('\n').map(l=>l.trim()).filter(Boolean);const pic=(ls.find(l=>/^\[pic:/i.test(l))||'').replace(/^\[pic:|\]$/gi,'');const st=ls.filter(l=>!/^\[pic:/i.test(l)&&!/^Q\s*\d*\s*[:.]/i.test(l)).join(' ');const qs=ls.filter(l=>/^Q\s*\d*\s*[:.]/i.test(l));return`<div class="story"><div class="cntline"><b>Story ${i+1}</b>${pic?`<span class="badge">🖼️ ${esc(pic)}</span>`:''}<span class="badge ${qs.length?'ok':'warn'}">❓ ${qs.length}</span></div><div class="st">${hiWords(st)}</div>${qs.map(q=>{const [qq,a,f]=q.replace(/^Q\s*\d*\s*[:.]\s*/i,'').split('|').map(x=>(x||'').trim());return`<div class="q"><b>Q</b> ${esc(qq)} <small>→ ${esc(a||'?')}${f?' · '+esc(f):''}</small></div>`}).join('')}</div>`}).join('')}}
 
 /* ---------- words ---------- */
@@ -527,7 +527,18 @@ async function fillIPA(){if(filling)return;const sid=SET.id,need=SET.words.filte
 async function aiWrongs(btn){if(!hasKey()){settingsSheet();toast('Add a Gemini key first · without one the worksheet still makes a grammar slip + a wrong-type reply');return}
  const L=VS.lines(SET.dlg),D=L.map(VS.dlgParse),need=D.map((d,i)=>[d,i]).filter(([d])=>d.q&&d.a&&!d.wr.length);if(!need.length){toast('✅ Every dialogue already has wrong answers');return}
  const old=btn.innerHTML;btn.disabled=true;btn.innerHTML='⏳ Making…';
- try{const out=await gemJSON(`You write multiple-choice distractors for young ${LG(SET.lang)[2]} learners. For each question and its correct answer, write 2 WRONG answers about the SAME person or thing (never another person or job): 1) "fact": same sentence pattern but a wrong fact (e.g. "A cleaner works on a bus."); 2) "trap": a grammar mistake of the correct answer (e.g. "A cleaner work in a hotel.") OR an answer of the wrong type for the question word (e.g. a Where-question answered "Yes, he does."). Keep them short and as long as the answer. Return a JSON array of {"i","fact","trap"} with the same i.\n${need.map(([d,i])=>JSON.stringify({i,q:d.q,a:d.a})).join('\n')}`);
+ try{const out=await gemJSON(`Act as an expert ESL/EFL assessment designer.
+Focus on the vocabulary theme: ${SET.name}.
+Target vocabulary list: ${wordList()}.
+
+For each item below (question + correct answer), write wrong1 and wrong2.
+Strict Rules for Quality Distractors:
+1. NO grammar errors. Every choice must be 100% grammatically correct so students cannot guess the answer using grammar clues.
+2. Same Topic & Structure: wrong1 and wrong2 must answer the same Wh-question type and use the same sentence structure and length as the correct Answer.
+3. Semantic Mismatch Only: use other vocabulary words from the same theme (Lexical Set) to create a factual mismatch (wrong location, wrong action, wrong tool, or wrong role).
+4. Plausible & Clear: natural English sentences, clearly false in real-world meaning, but realistic enough to test true vocabulary comprehension.
+Return a JSON array of {"i","fact","trap"} with the same i, where fact = wrong1 and trap = wrong2.
+${need.map(([d,i])=>JSON.stringify({i,q:d.q,a:d.a})).join('\n')}`);
   let n=0;(Array.isArray(out)?out:out.items||[]).forEach(o=>{const i=+o.i;const d=D[i];if(!d||d.wr.length)return;const w=[o.fact,o.trap].map(x=>String(x||'').replace(/\|/g,'/').trim()).filter(Boolean);if(w.length){d.wr=w;n++}});
   SET.dlg=D.map(d=>[d.q,d.a,...d.wr].join(' | ')).join('\n');save(true);renderEd();toast(`✨ Wrong answers added to ${n} dialogue${n===1?'':'s'}`)}
  catch(e){toast('⚠️ '+esc(e.message),5000)}finally{btn.disabled=false;btn.innerHTML=old}}
@@ -584,7 +595,19 @@ const wordList=()=>SET.words.map(w=>w.w).join(', ');
 async function aiText(kind,btn){if(!hasKey()){settingsSheet();toast('Add a Gemini key first');return}if(!SET.words.length){toast('Add some words first');return}
  const old=btn.innerHTML;btn.disabled=true;btn.innerHTML='⏳ Making…';const mt=LG(SET.mt)[2],ln=LG(SET.lang)[2];
  const P={sen:`Write 10 short, easy ${ln} sentences for young learners using these words (one word per sentence, each word used at least once if possible): ${wordList()}.\nFormat EXACTLY one per line: sentence | ${mt} translation\nPut the vocabulary word of each sentence in square brackets, e.g. I like [apples]. | ...\nNo numbering, no extra text.`,
-  dlg:`Write 10 short question-and-answer pairs (A asks, B answers) for young ${ln} learners, about: ${SET.name}; use these words: ${wordList()}.\nFormat EXACTLY one per line: Question? | Answer.\nEach answer must clearly fit only its own question. After the answer add 2 wrong answers about the SAME person or thing: one with a wrong fact, one with a grammar mistake or a reply of the wrong type (e.g. a where-question answered "Yes, he does.").\nFormat EXACTLY one per line: Question? | Answer. | wrong 1 | wrong 2\nNo numbering, no extra text.`,
+  dlg:`Act as an expert ESL/EFL assessment designer.
+Focus on the vocabulary theme: ${SET.name}.
+Target vocabulary list: ${wordList()}.
+
+Create ${Math.max(10,Math.min(20,SET.words.length))} dialogue items using this exact single-line format:
+Question | Answer | wrong1 | wrong2
+
+Strict Rules for Quality Distractors:
+1. NO grammar errors in any column. Every choice must be 100% grammatically correct so students cannot guess the answer using grammar clues.
+2. Same Topic & Structure: Both wrong1 and wrong2 must answer the same Wh-question type (What, Where, When, Who, How) and use the same sentence structure and length as the correct Answer.
+3. Semantic Mismatch Only: Create wrong1 and wrong2 using other vocabulary words from the same theme (Lexical Set) that create a factual mismatch (e.g., wrong location, wrong action, wrong tool, or wrong role).
+4. Plausible & Clear: Make the distractors sound like natural English sentences, clearly false in real-world meaning, but realistic enough to test true vocabulary comprehension.
+5. Output ONLY the raw lines separated by " | " with no numbering, bullet points, headers, or extra explanations.`,
   sto:`Write 3 very short picture stories for young ${ln} learners using some of these words: ${wordList()}.\nEach story: 2–3 simple sentences, then 3 questions (who/what/where/yes-no).\nFormat EXACTLY:\n[pic:park]\nStory sentences on one line.\nQ: question? | accepted short answer / another accepted answer | full-sentence model answer.\n(blank line between stories). Pick the closest scene with [pic:NAME], NAME one of: ${(window.SCENE_IDS||["kitchen","park","rain"]).join(", ")}. No extra text.`};
  try{const t=await gemText(P[kind]);const add=t.split('\n').map(l=>l.replace(/^\s*[-*\d.)]+\s+(?=\S)/,(m)=>/^\s*\d+[.)]\s+/.test(m)?'':m)).join('\n').trim();
   SET[kind]=(SET[kind]?SET[kind].replace(/\s+$/,'')+(kind==='sto'?'\n\n':'\n'):'')+add;save(true);renderEd();toast('✨ Added');if(kind==='sen')fetchSenIPA(true)}

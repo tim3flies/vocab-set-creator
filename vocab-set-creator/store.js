@@ -92,8 +92,17 @@ function flip(a){const m=String(a||'').match(/^(Yes|No), (I|you|he|she|it|we|the
 const TYPE={where:['At seven o’clock.','Yes, they do.','Because it is fun.'],when:['In the kitchen.','Yes, I do.','A red one.'],who:['In the morning.','Yes, she is.','At the shop.'],what:['Yes, he does.','At nine o’clock.','In the park.'],which:['Yes, it is.','On Monday.','At school.'],why:['At home.','Yes, I can.','Two, please.'],how:['Yes, I do.','In the box.','On Sunday.'],howmany:['Yes, please.','In the box.','Very well.'],howmuch:['Yes, it is.','At the market.','Blue and green.'],whose:['In the morning.','Yes, it is.','At the bus stop.'],yn:['At the market.','In the evening.','Three, please.'],'':['Yes, I do.','At home.','In the morning.']};
 function qType(q){const w=String(q||'').toLowerCase().replace(/[^a-z ]/g,'').split(' ').filter(Boolean);if(!w.length)return'';if(w[0]==='how'&&(w[1]==='many'||w[1]==='much'))return 'how'+w[1];
  if(TYPE[w[0]])return w[0];if(/^(do|does|did|is|are|am|was|were|can|could|will|would|have|has|should|may)$/.test(w[0]))return 'yn';return ''}
-function dlgWrongs(q,a,given,others,i){const A=String(a||'').trim(),low=x=>String(x||'').trim().toLowerCase(),out=[];const add=x=>{x=String(x||'').trim();if(x&&low(x)!==low(A)&&!out.some(y=>low(y)===low(x)))out.push(x)};
- (given||[]).forEach(add);add(slip(A));add(flip(A));const T=TYPE[qType(q)]||TYPE[''];add(T[(i||0)%T.length]);add(T[((i||0)+1)%T.length]);(others||[]).forEach(add);return out}
+/* Nana 25 Nov: wrong choices must be 100% grammatical, same structure, wrong only in meaning →
+   swap a set word in the answer for another set word (a/an fixed), then Yes/No flip, then other answers to the same kind of question */
+function swapWord(q,A,vocab,pool,k){const esc=v=>v.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),has=(t,v)=>new RegExp('\\b'+esc(v)+'\\b','i').test(t);
+ const V=(vocab||[]).map(v=>String(v||'').trim()).filter(v=>v.length>1).sort((x,y)=>y.length-x.length);
+ const hits=V.filter(v=>has(A,v)&&!has(q,v)&&!V.some(o=>o!==v&&o.length>v.length&&has(A,o)&&has(o,v)));if(hits.length!==1)return ''; // one place/thing/action word only (not lists)
+ const hit=hits[0],P=V.filter(v=>v.toLowerCase()!==hit.toLowerCase()&&!has(A,v)&&(pool||[]).some(t=>has(t,v)));if(!P.length)return '';
+ const rep=P[(k*7+A.length)%P.length];return A.replace(new RegExp('(\\b(a|an)\\s+)?\\b'+esc(hit)+'\\b','i'),(m,art,a1)=>{const orig=m.replace(/^(a|an)\s+/i,'');const w=/^[A-Z]/.test(orig)?rep[0].toUpperCase()+rep.slice(1):rep.toLowerCase();
+  if(!art)return w;const an=/^[aeiou]/i.test(w)&&!/^(uni|use|one|eu)/i.test(w);return (a1[0]===a1[0].toUpperCase()?(an?'An':'A'):(an?'an':'a'))+' '+w})}
+function dlgWrongs(q,a,given,others,i,vocab){const A=String(a||'').trim(),low=x=>String(x||'').trim().toLowerCase(),out=[];const add=x=>{x=String(x||'').trim();if(x&&low(x)!==low(A)&&!out.some(y=>low(y)===low(x)))out.push(x)};
+ const pool=(others||[]).map(o=>typeof o==='object'?o.a:o);(given||[]).forEach(add);add(swapWord(q,A,vocab,pool,(i||0)));add(swapWord(q,A,vocab,pool,(i||0)+3));add(flip(A));
+ const qt=qType(q),same=(others||[]).filter(o=>typeof o==='object'?qType(o.q)===qt:false).map(o=>o.a);same.forEach(add);(others||[]).map(o=>typeof o==='object'?o.a:o).forEach(add);return out}
 const dlgParse=l=>{const p=String(l||'').split('|').map(x=>x.trim());return {q:p[0]||'',a:p[1]||'',wr:p.slice(2).filter(Boolean)}};
 window.VS={
  dlgWrongs,dlgParse,
