@@ -15,7 +15,13 @@
 (function(){
 const DB='bokogo-vocab',ST='sets',CUR='bokogo.vset.cur';
 let dbp=null;
-function db(){if(dbp)return dbp;dbp=new Promise((ok,no)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains(ST))d.createObjectStore(ST,{keyPath:'id'})};r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error)});return dbp}
+/* Safari sometimes never answers the first indexedDB.open: ask again every 2.5 s (3 tries), then give up so the page still starts */
+function db(){if(dbp)return dbp;dbp=new Promise((ok,no)=>{let done=0,tries=0,err=null;
+ const go=()=>{tries++;let r;try{r=indexedDB.open(DB,1)}catch(e){err=e;return}r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains(ST))d.createObjectStore(ST,{keyPath:'id'})};
+  r.onsuccess=()=>{if(done){try{r.result.close()}catch(e){}return}done=1;ok(r.result)};r.onerror=()=>{err=r.error}};
+ go();const t=setInterval(()=>{if(done){clearInterval(t);return}if(tries>=3){clearInterval(t);done=1;window.__report&&window.__report('IndexedDB did not open: '+(err&&err.message||'no answer'));no(err||new Error('IndexedDB did not open'));return}
+  window.__report&&tries===1&&window.__report('IndexedDB slow to open, trying again');go()},2500)});
+ dbp.catch(()=>{dbp=null});return dbp}
 function tx(mode,fn){return db().then(d=>new Promise((ok,no)=>{const t=d.transaction(ST,mode),s=t.objectStore(ST);let out;const r=fn(s);if(r)r.onsuccess=()=>{out=r.result};t.oncomplete=()=>ok(out);t.onerror=()=>no(t.error);t.onabort=()=>no(t.error)}))}
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const allL=()=>tx('readonly',s=>s.getAll()).then(a=>(a||[]).sort((x,y)=>(y.updated||0)-(x.updated||0)));

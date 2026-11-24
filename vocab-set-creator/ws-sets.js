@@ -37,9 +37,20 @@ function watchEdits(){if(!window.VSET||!window.__WS)return;const S=window.__WS.S
   if(S.sto!==snap.sto){snap.sto=S.sto;V.sto=S.sto;ch=true}
   if(ch)VS.put(V).catch(()=>{})},600)},true)}
 
+/* Start-up watchdog (Safari blank page, Nana 24 Nov): a small worker reports to the error log if the page freezes,
+   and the page reports if the set takes too long to load or nothing is drawn after start. */
+const WD=(()=>{try{const api=new URL(VS.API,location.href).href;
+ const w=new Worker(URL.createObjectURL(new Blob([`let last=Date.now(),step='start',sent=0,done=0,info={};onmessage=e=>{last=Date.now();const d=e.data||{};if(d.s)step=d.s;if(d.done)done=1;if(d.info)info=d.info};
+setInterval(()=>{if(done||sent||info.hidden)return;if(Date.now()-last>6000){sent=1;fetch(info.api+'?a=log',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({p:info.p,m:'Page froze at: '+step,s:'watchdog',l:0,c:0,st:'',ua:info.ua})}).catch(()=>{})}},1000)`],{type:'text/javascript'})));
+ const info=()=>({api,p:location.pathname+location.search,ua:navigator.userAgent,hidden:document.hidden});w.postMessage({info:info()});
+ const hb=setInterval(()=>w.postMessage({info:info()}),1000);
+ return {s:x=>w.postMessage({s:x,info:info()}),done(){w.postMessage({done:1});clearInterval(hb);setTimeout(()=>w.terminate(),500)}}}catch(e){return {s(){},done(){}}}})();
 (async()=>{
- let v=null;
- try{const id=q.get('set')||VS.cur.get();if(id)v=await VS.get(id);if(!v&&!q.get('set')){const all=await VS.all();v=all[0]||null}}catch(e){}
+ let v=null,slow=false;WD.s('loading set');
+ const load=(async()=>{try{const id=q.get('set')||VS.cur.get();if(id)v=await VS.get(id);if(!v&&!q.get('set')){const all=await VS.all();v=all[0]||null}}catch(e){}})();
+ await Promise.race([load,new Promise(r=>setTimeout(()=>{slow=true;r()},9000))]);
+ if(slow){window.__report&&window.__report('Worksheet: set did not load in 9 s, started with sample words');v=null}
+ WD.s('drawing worksheet '+(q.get('t')||'(saved type)')+(v?' · '+v.words.length+' words':' · sample'));
  if(v&&v.words&&v.words.filter(w=>w.w).length>=2){useSet(v);VS.cur.set(v.id)}else v=null;
  try{window.__wsBoot()}catch(e){window.__report&&window.__report('Worksheet start: '+e.message,'worksheets.html',0,0,e.stack);throw e}
  const b=document.getElementById('tpb');
@@ -47,5 +58,8 @@ function watchEdits(){if(!window.VSET||!window.__WS)return;const S=window.__WS.S
   const A=window.VSET_AUTO,miss=[A.sen&&'sentences',A.dlg&&'dialogues',A.sto&&'stories'].filter(Boolean);
   if(miss.length)setTimeout(()=>window.__WS.toast(`ℹ️ This set has no ${miss.join(' / ')} yet: simple ones are used (add them in the creator)`),600)}
  else{b.textContent='🍎 Fruits (sample) ▾';setTimeout(()=>window.__WS&&window.__WS.toast('🍎 Sample words · tap the topic button to choose your vocab set'),600)}
+ WD.s('after start');setTimeout(()=>{const pv=document.getElementById('prev'),sb=document.querySelector('#set .sb');
+  if(!pv||!pv.querySelector('.sheet')||!sb||!sb.children.length)window.__report&&window.__report('Worksheet blank after start: sheets='+(pv?pv.querySelectorAll('.sheet').length:'none')+' settings='+(sb?sb.children.length:'none')+' prevW='+(pv?pv.clientWidth:0));
+  WD.done()},1500);
 })();
 })();

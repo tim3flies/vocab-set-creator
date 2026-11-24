@@ -416,7 +416,7 @@ function rng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.im
 const shuf=(a,r)=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const pickOpts=(tgt,pool,n,r)=>shuf([tgt,...shuf(pool.filter(x=>x!==tgt),r).slice(0,n-1)],r);
 const AB='ABCD';
-const chunk=(a,n)=>{const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o.length?o:[[]]};
+const chunk=(a,n)=>{n=Math.max(1,Math.floor(+n)||1);const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o.length?o:[[]]};
 const words=s=>s.replace(/([.?!,])/g,' $1').split(/\s+/).filter(Boolean);
 function qr(seed,mm){const r=rng(seed*7+3),n=21,c=[];const fin=(x,y)=>{c.push(`<rect x="${x}" y="${y}" width="7" height="7" fill="#111"/><rect x="${x+1}" y="${y+1}" width="5" height="5" fill="#fff"/><rect x="${x+2}" y="${y+2}" width="3" height="3" fill="#111"/>`)};
  for(let y=0;y<n;y++)for(let x=0;x<n;x++){if((x<8&&y<8)||(x>12&&y<8)||(x<8&&y>12))continue;if(r()<.48)c.push(`<rect x="${x}" y="${y}" width="1" height="1" fill="#111"/>`)}

@@ -92,7 +92,7 @@ input,select,textarea{font-size:16px}
 .tools::-webkit-scrollbar{display:none}
 .chip{flex:none;height:36px;padding:0 12px;border-radius:18px;border:1px solid var(--line);background:var(--paper);font-weight:700;font-size:13.5px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
 .chip:hover{border-color:var(--p)}
-.chip.ai{background:linear-gradient(90deg,#f0fdfa,#f5f3ff);border-color:#c4b5fd}
+.chip.ai{background:linear-gradient(90deg,#f0fdfa,#f5f3ff);border-color:#c4b5fd}.chip.warn{background:#fff7ed;border-color:#fdba74;color:#9a3412}
 .chip.on{background:var(--p7);color:#fff;border-color:var(--p7)}
 .chip:disabled{opacity:.55}
 .pane{flex:1;padding:6px 10px 12px}
@@ -452,7 +452,7 @@ function sideHTML(){const c=counts(SET),need={w:c.w>=2,s:c.s>0,d:c.d>0,t:c.t>0};
  </div>`}
 function renderSide(){$('side').innerHTML=sideHTML()}
 function renderTools(){const T=$('tools');
- if(TAB==='w')T.innerHTML=`<button class="chip" data-a="fill">✨ Auto-fill IPA · meaning · picture</button><button class="chip" data-a="paste">📋 Paste list</button><button class="chip" data-a="pics">🖼️ Add pictures</button><button class="chip" data-a="cutsheet">🧩 Cut picture sheet</button><button class="chip ai" data-a="aiwords">✨ AI word list</button><button class="chip ai" data-a="aipics">🎨 AI pictures</button>`;
+ if(TAB==='w')T.innerHTML=`<button class="chip" data-a="fill">✨ Auto-fill IPA · meaning · picture</button>${(()=>{const n=SET.words.filter(w=>w.w&&!String(w.ipa||'').trim()).length;return `<button class="chip${n?' warn':''}" data-a="fillipa" title="Find words with no IPA and fill only those">🔤 Check IPA${n?` · ${n} missing`:' ✓'}</button>`})()}<button class="chip" data-a="paste">📋 Paste list</button><button class="chip" data-a="pics">🖼️ Add pictures</button><button class="chip" data-a="cutsheet">🧩 Cut picture sheet</button><button class="chip ai" data-a="aiwords">✨ AI word list</button><button class="chip ai" data-a="aipics">🎨 AI pictures</button>`;
  else if(TAB==='s')T.innerHTML=`<button class="chip ai" data-a="aisen">✨ Make sentences from words</button><button class="chip" data-a="trsen">🌐 Fill missing meanings</button><button class="chip" data-a="ipasen">🔤 Get IPA for sentence words</button>`;
  else if(TAB==='d')T.innerHTML=`<button class="chip ai" data-a="aidlg">✨ Make dialogues from words</button>`;
  else T.innerHTML=STO.tools()}
@@ -505,6 +505,20 @@ async function autoFill(ws,quiet){if(filling)return;ws=ws||SET.words;const need=
   }
   if(SET?.id===sid){save();if(!document.activeElement?.closest?.('.wr'))renderEd()}
   const miss=need.filter(w=>!w.ipa||!w.m).length;toast(miss?`✅ Filled · ${miss} word${miss>1?'s':''} still need IPA or meaning (type them in)`:'✅ IPA, meaning and pictures filled');
+ }catch(e){toast('⚠️ '+esc(e.message),5000)}finally{filling=false}}
+
+/* 🔤 Check IPA (Nana 24 Nov): find words with no IPA and fill only those; nothing else is touched */
+async function fillIPA(){if(filling)return;const sid=SET.id,need=SET.words.filter(w=>w.w&&!String(w.ipa||'').trim());
+ if(!need.length){toast('✅ Every word has IPA');return}
+ filling=true;toast(`🔤 ${need.length} word${need.length>1?'s':''} without IPA · looking up…`,8000);
+ try{
+  if(SET.lang==='en')for(const w of need){if(SET?.id!==sid)break;w.ipa=await freeIPA(w.w)}
+  const left=need.filter(w=>!w.ipa);
+  if(left.length&&hasKey()&&SET?.id===sid){try{const out=await gemJSON(`Give the British IPA (no slashes, with stress marks and syllable dots like ˈæp.əl) for each ${LG(SET.lang)[2]} word or phrase below. Return a JSON array of {"w","ipa"} in the same order.\nWords:\n${left.map(w=>w.w).join('\n')}`);
+   (Array.isArray(out)?out:out.words||[]).forEach((o,i)=>{const w=left.find(x=>x.w.toLowerCase()===String(o.w||'').toLowerCase())||left[i];if(w&&!w.ipa&&o.ipa)w.ipa=String(o.ipa).replace(/^\/|\/$/g,'').trim()})}catch(e){}}
+  if(SET?.id===sid){save();renderEd()}
+  const still=need.filter(w=>!w.ipa),got=need.length-still.length;
+  toast(still.length?`🔤 Filled ${got} · still missing: ${still.slice(0,6).map(w=>esc(w.w)).join(', ')}${still.length>6?'…':''} (type them in${hasKey()?'':' or add a Gemini key in ⚙️'})`:`✅ IPA filled for ${got} word${got>1?'s':''}`,still.length?7000:3500);
  }catch(e){toast('⚠️ '+esc(e.message),5000)}finally{filling=false}}
 
 /* picture from file names */
@@ -694,6 +708,7 @@ document.addEventListener('click',async e=>{const t=e.target;
   case 'delw':{const w=SET.words[i];SET.words.splice(i,1);save();renderEd();toast(`🗑 ${esc(w.w)} · <button style="background:none;border:0;color:#5eead4;font-weight:800" data-a="undo">Undo</button>`,5000);window._undo=[i,w];break}
   case 'undo':if(window._undo){SET.words.splice(window._undo[0],0,window._undo[1]);window._undo=null;save();renderEd()}break;
   case 'fill':autoFill(null,false);break;
+  case 'fillipa':fillIPA();break;
   case 'paste':pasteSheet();break;
   case 'dopaste':{const l=parseLines($('pt').value);closeSheet();addWords(l);break}
   case 'pics':$('fImgs').click();break;
