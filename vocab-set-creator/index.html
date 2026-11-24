@@ -603,7 +603,21 @@ function iconSheet(){const opts=[...new Set([...SET.words.map(w=>w.e).filter(Boo
 const wordList=()=>SET.words.map(w=>w.w).join(', ');
 async function aiText(kind,btn){if(!hasKey()){settingsSheet();toast('Add a Gemini key first');return}if(!SET.words.length){toast('Add some words first');return}
  const old=btn.innerHTML;btn.disabled=true;btn.innerHTML='⏳ Making…';const mt=LG(SET.mt)[2],ln=LG(SET.lang)[2];
- const P={sen:`Write 10 short, easy ${ln} sentences for young learners using these words (one word per sentence, each word used at least once if possible): ${wordList()}.\nFormat EXACTLY one per line: sentence | ${mt} translation\nPut the vocabulary word of each sentence in square brackets, e.g. I like [apples]. | ...\nNo numbering, no extra text.`,
+ const P={sen:`Act as an expert ESL/EFL assessment designer.
+Focus on the vocabulary theme: ${SET.name}.
+Target vocabulary list: ${wordList()}.
+
+Create exactly ONE sentence for EVERY single word in the target vocabulary list above (1:1 match with the total number of words provided).
+
+Use this exact single-line format:
+${ln} sentence with the target word in [brackets] | Natural ${mt} translation
+
+Strict Rules for Quality Fill-in-the-Blank Items:
+1. Complete Coverage: Do not skip any word from the target list. Use each target word in its exact base form inside [brackets] (e.g., I like [apples].${SET.mt==='th'?' | ฉันชอบแอปเปิล':''}).
+2. Strong Context Clues: Every sentence must include clear surrounding context clues from the theme so the learner can logically deduce the missing word without guessing.
+3. Natural & Clear ${ln}: Use level-appropriate, natural everyday ${ln} (CEFR A1–B1) with 100% accurate grammar.
+4. Accurate ${mt} Meaning: Provide a natural, accurate ${mt} translation of the complete sentence on the right side of the pipe " | ".
+5. Output ONLY the raw lines separated by " | " with no numbering, bullet points, headers, or extra explanations.`,
   dlg:`Act as an expert ESL/EFL assessment designer.
 Focus on the vocabulary theme: ${SET.name}.
 Target vocabulary list: ${wordList()}.
