@@ -6,7 +6,7 @@ D=$(cd "$(dirname "$0")" && pwd); R=/srv/english
 mkdir -p $R/public/media $R/data $R/logs
 chown -R serverpilot:serverpilot $R; chmod 750 $R/data
 if [ ! -f $R/data/config.php ]; then
-  INV=$(tr -dc 'a-z0-9' </dev/urandom | head -c 10)
+  INV=$(od -An -N5 -tx1 /dev/urandom | tr -d ' \n')
   printf "<?php return ['invite'=>'%s','base'=>'https://english.learn8.co'];\n" "$INV" > $R/data/config.php
   chown serverpilot:serverpilot $R/data/config.php; chmod 640 $R/data/config.php
 fi
