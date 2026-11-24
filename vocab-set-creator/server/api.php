@@ -156,7 +156,7 @@ switch ($a) {
     $sql = 'SELECT p.id,p.url,p.kind,p.name,p.owner,p.created,u.name AS by FROM pictures p LEFT JOIN users u ON u.id=p.owner WHERE (p.shared=1 OR p.owner=?)';
     $arg = [$u['id']];
     if ($mine) { $sql .= ' AND p.owner=?'; $arg[] = $u['id']; }
-    if (in_array($kind, ['word', 'scene'], true)) { $sql .= ' AND p.kind=?'; $arg[] = $kind; }
+    if (in_array($kind, ['word', 'scene', 'bingo'], true)) { $sql .= ' AND p.kind=?'; $arg[] = $kind; } else $sql .= " AND p.kind<>'bingo'";
     $st = $db->prepare($sql . ' ORDER BY p.created DESC LIMIT 2000'); $st->execute($arg);
     $list = [];
     foreach ($st as $r) {
@@ -172,7 +172,7 @@ switch ($a) {
     if (!$d || isset($d['bad'])) fail('Not a picture');
     $nm = is_array($in['name'] ?? null) ? $in['name'] : [];
     $clean = []; foreach ($nm as $k => $v) $clean[lang($k, 'en')] = (string)$v;
-    out(saveBin($db, $d['bin'], $d['ext'], (int)$u['id'], ($in['kind'] ?? '') === 'word' ? 'word' : 'scene', $clean, $CFG));
+    out(saveBin($db, $d['bin'], $d['ext'], (int)$u['id'], in_array($in['kind'] ?? '', ['word', 'bingo'], true) ? $in['kind'] : 'scene', $clean, $CFG));
   }
   case 'logout': { $u = user($db); $db->prepare('DELETE FROM tokens WHERE tok=?')->execute([$u['tok']]); out(['ok' => 1]); }
   case 'list': {

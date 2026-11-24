@@ -6,6 +6,8 @@ curl -fsSL https://codeload.github.com/tim3flies/vocab-set-creator/tar.gz/main |
 S="$T/vocab-set-creator-main/vocab-set-creator"
 mkdir -p "$R/public/vocab" "$R/public/api"
 for f in index.html store.js cutter.js emoji.js scenes.js stories.js worksheets.html ws-sets.js; do install -m 644 "$S/$f" "$R/public/vocab/$f"; done
+# L4 bingo card backgrounds: made once from the Learn8 SpinWheel default backgrounds (that file is only read)
+[ -s "$R/public/vocab/bingo/bg6.jpg" ] || python3 "$S/server/bingo_bg.py" /srv/users/serverpilot/apps/learn8/public/spinwheel/index.html "$R/public/vocab/bingo" || echo "bingo backgrounds missing"
 install -m 644 "$S/server/api.php" "$R/public/api/index.php"
 install -m 644 "$S/server/root-index.html" "$R/public/index.html"
 install -m 755 "$S/server/deploy.sh" "$R/deploy.sh"
