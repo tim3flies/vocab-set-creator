@@ -1,6 +1,16 @@
 /* Bokogo Vocab Sets · shared storage (IndexedDB on this device). Used by index.html (creator) and worksheets.html (print).
    One set = {id,name,icon,lang,mt,words:[{id,w,ipa,m,e,img}],sen,dlg,sto,ipa:{},created,updated}
    sen: "English | meaning" per line ([word] = blank for R6) · dlg: "Question | Answer" per line · sto: R7 story blocks · ipa: extra word→IPA for sentence words */
+/* Page error reporter: shows a small red bar and sends the error to english.learn8.co (logs/client.log) so it can be fixed. */
+(function(){const H=location.hostname,API=/(^|\.)learn8\.co$/.test(H)?'/api/':'https://english.learn8.co/api/';let n=0;
+ function rep(m,src,line,col,stack){if(n++>5)return;const msg=String(m||'Error').slice(0,300);
+  try{const b=document.createElement('div');b.setAttribute('role','alert');b.style.cssText='position:fixed;left:8px;right:8px;bottom:8px;z-index:99999;background:#b42318;color:#fff;font:600 13px/1.4 system-ui,sans-serif;padding:10px 12px;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.25)';
+   b.textContent='⚠️ Something broke on this page: '+msg+(line?' ('+String(src||'').split('/').pop()+':'+line+')':'')+'. It was reported automatically.';b.onclick=()=>b.remove();(document.body||document.documentElement).appendChild(b)}catch(e){}
+  try{fetch(API+'?a=log',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({p:location.pathname+location.search,m:msg,s:String(src||''),l:line||0,c:col||0,st:String(stack||'').slice(0,1500),ua:navigator.userAgent})}).catch(()=>{})}catch(e){}}
+ window.__report=rep;
+ addEventListener('error',e=>{if(e&&e.message)rep(e.message,e.filename,e.lineno,e.colno,e.error&&e.error.stack)});
+ addEventListener('unhandledrejection',e=>{const r=e&&e.reason;rep('Promise: '+(r&&r.message||r),'',0,0,r&&r.stack)});
+})();
 (function(){
 const DB='bokogo-vocab',ST='sets',CUR='bokogo.vset.cur';
 let dbp=null;
@@ -28,6 +38,8 @@ const C={st:ld(),state:'off',busy:null,t:null,again:false,firstP:null,
   if(!r.ok)throw new Error(j.error||('Server error '+r.status));return j},
  async signin(name,pass){const j=await this.req('login',{name,pass});this.st={tok:j.tok,name:j.name,since:0,done:{},dels:[]};this.sv();this.emit({state:'on'});await this.sync();return j},
  async register(name,pass,invite){const j=await this.req('register',{name,pass,invite});this.st={tok:j.tok,name:j.name,since:0,done:{},dels:[]};this.sv();this.emit({state:'on'});await this.sync();return j},
+ all(q){return this.req('all',null,'&q='+encodeURIComponent(q||''))},
+ shared(u,id){return this.req('get',null,'&u='+(+u)+'&id='+encodeURIComponent(id))},
  async signout(){try{await this.req('logout',{})}catch(e){}this.st={};this.sv();this.emit({state:'off'})},
  first(){if(!this.on())return Promise.resolve();if(!this.firstP)this.firstP=Promise.race([this.sync().catch(()=>{}),new Promise(r=>setTimeout(r,4000))]);return this.firstP},
  soon(){if(!this.on())return;clearTimeout(this.t);this.t=setTimeout(()=>this.sync().catch(()=>{}),1500)},

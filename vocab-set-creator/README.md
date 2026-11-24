@@ -43,8 +43,10 @@ iPhone mini 375: stacked word rows, bottom add bar, ⋮ sheet for print types/la
 Live at **https://english.learn8.co/vocab/** (own site on the DigitalOcean droplet; learn8.co is not touched). The GitHub Pages copy can sign in to the same server.
 - Tap **☁️ Sign in** (top bar). New account needs the invite code (kept in `/srv/english/data/config.php`). After sign-in every set on the device is uploaded, then kept in sync (on save after 1.5 s, on focus, every 60 s, when back online). Last change wins (`updated`). Deleting a set deletes it on all devices. Green dot = saved, orange = saving, red = offline/error.
 - Pictures (`data:` images) are saved as files on the server (`/media/<user>/<sha1>.png|jpg|webp`) and the set keeps their URL, so sets stay small.
+- 💾 **Save** button in the set editor (saves now + uploads; label turns grey “Saved”). Sets also autosave while you type.
+- 🌐 **All vocab sets** tab on the home page (signed in): every teacher's online sets with owner, search by set / word / teacher, ⧉ Copy to my sets (copy keeps `from` + `by`).
 - Sync lives in `store.js` (`VS.cloud`): both the creator and the worksheet page use it.
-- `server/`: `api.php` (PHP 8.3 + SQLite, actions register/login/me/logout/list/put/del, Bearer token), `nginx.conf` + `nginx-body.inc`, `php-pool.conf` (own pool in php8.3-fpm-sp), `setup.sh` (one time), `certbot.sh` (Let's Encrypt), `deploy.sh` (update the site from this repo: `bash /srv/english/deploy.sh`).
+- `server/`: `api.php` (PHP 8.3 + SQLite, actions register/login/me/logout/list/put/del/all/get, Bearer token), `nginx.conf` + `nginx-body.inc`, `php-pool.conf` (own pool in php8.3-fpm-sp), `setup.sh` (one time), `certbot.sh` (Let's Encrypt), `deploy.sh` (update the site from this repo: `bash /srv/english/deploy.sh`).
 - Server files: `/srv/english/{public,data,logs}`, `/etc/nginx-sp/vhosts.d/english.conf`, `/etc/nginx-sp/english-body.inc`, `/etc/php8.3-sp/fpm-pools.d/english.conf`.
 
 ## Not yet

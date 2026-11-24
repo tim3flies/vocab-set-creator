@@ -38,7 +38,7 @@ function watchEdits(){if(!window.VSET||!window.__WS)return;const S=window.__WS.S
  let v=null;
  try{const id=q.get('set')||VS.cur.get();if(id)v=await VS.get(id);if(!v&&!q.get('set')){const all=await VS.all();v=all[0]||null}}catch(e){}
  if(v&&v.words&&v.words.filter(w=>w.w).length>=2){useSet(v);VS.cur.set(v.id)}else v=null;
- window.__wsBoot();
+ try{window.__wsBoot()}catch(e){window.__report&&window.__report('Worksheet start: '+e.message,'worksheets.html',0,0,e.stack);throw e}
  const b=document.getElementById('tpb');
  if(v){b.textContent=`${v.icon||'📚'} ${v.name} · ${window.VSET_W.length} ▾`;watchEdits();
   const A=window.VSET_AUTO,miss=[A.sen&&'sentences',A.dlg&&'dialogues',A.sto&&'stories'].filter(Boolean);

@@ -61,6 +61,12 @@ input,select,textarea{font-size:16px}
 .strip span img{width:100%;height:100%;object-fit:contain}
 .vca{display:flex;gap:8px}
 .vca .ib{flex:1}
+.ltabs{display:flex;gap:6px;background:var(--s2);padding:4px;border-radius:14px;margin:0 0 12px;max-width:440px}
+.lt{flex:1;height:38px;border:0;border-radius:11px;background:transparent;font-weight:800;font-size:14px;color:var(--muted);white-space:nowrap}
+.lt.on{background:var(--paper);color:inherit;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.allq{margin:-4px 0 12px}.allq input{width:100%;max-width:440px;height:42px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font-size:16px;background:var(--paper)}
+.own{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.own.me{color:var(--p7);font-weight:700}
+#saveB.saved{background:var(--paper);border-color:var(--line);color:var(--muted)!important}
 .cbtn{position:relative}.cdot{position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:transparent}
 .cdot.on{background:#2e9d5b}.cdot.busy{background:#e8a23a}.cdot.err,.cdot.offline{background:#d9534f}
 .cl-st{display:flex;align-items:center;gap:10px;padding:12px;border-radius:14px;background:var(--soft,#f4f1ea);margin-bottom:12px}.cl-st b{display:block}
@@ -260,7 +266,9 @@ body.dragging .dropzone{display:block}
   <button class="ib" data-a="settings" title="Settings"><span class="emo">⚙️</span></button>
  </header>
  <main class="libw">
-  <div class="lh"><h2>My vocab sets</h2><span class="muted" id="libn"></span></div>
+  <nav class="ltabs" role="tablist"><button class="lt on" data-a="lt-my" id="ltMy" role="tab">📚 <span>My sets</span></button><button class="lt" data-a="lt-all" id="ltAll" role="tab">🌐 <span>All vocab sets</span></button></nav>
+  <div class="lh"><h2 id="libh">My vocab sets</h2><span class="muted" id="libn"></span></div>
+  <div class="allq" id="allqw" hidden><input id="allq" type="search" placeholder="🔍 Search sets, words or teachers" autocomplete="off"></div>
   <div class="grid" id="grid"></div>
  </main>
  <button class="fab" data-a="new">＋ New set</button>
@@ -272,7 +280,8 @@ body.dragging .dropzone{display:block}
   <button class="ib cbtn" data-a="home" title="All sets">‹ <span class="emo">📚</span><i class="cdot" id="cloudD2"></i></button>
   <button class="ib" data-a="icon" title="Set picture" id="edIcon"><span class="bigemo">📚</span></button>
   <input class="nm" id="edName" aria-label="Set name" placeholder="Set name">
-  <a class="ib pri" id="edPrint" href="worksheets.html" title="Make worksheets"><span class="emo">🖨️</span><span class="lb hs">Worksheets</span></a>
+  <button class="ib pri" data-a="savenow" id="saveB" title="Save"><span class="emo">💾</span><span class="lb hs" id="saveL">Save</span></button>
+  <a class="ib" id="edPrint" href="worksheets.html" title="Make worksheets"><span class="emo">🖨️</span><span class="lb hs onlyW">Worksheets</span></a>
   <button class="ib onlyS" data-a="more" title="Set options">⋮</button>
  </header>
  <div class="edb">
@@ -321,7 +330,10 @@ const STY=[['cute','🧸 Cute','cute kawaii cartoon sticker, thick clean outline
 
 /* ---------- state ---------- */
 let SETS=[],SET=null,TAB='w',saveT=null,PICK=-1;
-const save=(now)=>{if(!SET)return;clearTimeout(saveT);const go=()=>{saveT=null;return VS.put(SET).catch(e=>toast('⚠️ Save failed: '+esc(e.message)))};if(now)return go();saveT=setTimeout(go,400)};
+function saveUI(st){const b=$('saveB'),l=$('saveL');if(!b)return;b.classList.toggle('saved',st==='saved');b.classList.toggle('pri',st!=='saved');l.textContent=st==='saved'?'Saved':st==='saving'?'Saving…':'Save';b.title=st==='saved'?(VS.cloud.on()?'Saved online':'Saved on this device'):'Save'}
+const save=(now)=>{if(!SET)return;clearTimeout(saveT);saveUI('dirty');const go=()=>{saveT=null;return VS.put(SET).then(()=>{if(!VS.cloud.on())saveUI('saved')}).catch(e=>toast('⚠️ Save failed: '+esc(e.message)))};if(now)return go();saveT=setTimeout(go,400)};
+async function saveNow(){if(!SET)return;saveUI('saving');await save(true);if(!VS.cloud.on()){saveUI('saved');toast('💾 Saved on this device. ☁️ Sign in to save online.');return}
+ try{await VS.cloud.sync();saveUI('saved');toast('💾 Saved online')}catch(e){saveUI('dirty');toast('⚠️ Not saved online yet: '+esc(e.message)+'. It is safe on this device and will retry.')}}
 
 /* ---------- images ---------- */
 function fileToData(f){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(f)})}
@@ -346,13 +358,25 @@ const keyWarn=()=>`<div class="keywarn">✨ AI needs a Gemini API key (free at G
 /* =================== LIBRARY =================== */
 async function showLib(){SET=null;$('vEd').hidden=true;$('vLib').hidden=false;document.title='Bokogo Vocab Sets';history.replaceState(null,'',location.pathname);SETS=await VS.all();renderLib()}
 function counts(s){return{w:s.words.length,s:VS.lines(s.sen).length,d:VS.lines(s.dlg).length,t:String(s.sto||'').split(/\n\s*\n/).filter(b=>b.trim()).length}}
-function renderLib(){const g=$('grid');$('libn').textContent=SETS.length?SETS.length+' sets':'';
+let LTAB='my',ALL=[],allT=null;
+function libTabs(){$('ltMy').classList.toggle('on',LTAB==='my');$('ltAll').classList.toggle('on',LTAB==='all');$('allqw').hidden=LTAB!=='all';$('libh').textContent=LTAB==='all'?'All vocab sets':'My vocab sets';document.querySelector('#vLib .fab').hidden=LTAB==='all'}
+async function loadAll(){const g=$('grid');libTabs();if(!VS.cloud.on()){$('libn').textContent='';g.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="big">🌐📚</div><h2 style="margin:0">Every teacher's vocab sets</h2><p>Sign in to see the sets all teachers saved online, then copy one into your sets.</p><button class="ib pri" data-a="cloud">☁️ Sign in</button></div>`;return}
+ if(!ALL.length)g.innerHTML='<p class="muted" style="grid-column:1/-1">⏳ Loading…</p>';
+ try{ALL=(await VS.cloud.all(($('allq').value||'').trim())).sets||[]}catch(e){g.innerHTML=`<p style="grid-column:1/-1">⚠️ ${esc(e.message)}</p>`;return}
+ if(LTAB==='all')renderAll()}
+function renderAll(){const g=$('grid');$('libn').textContent=ALL.length?ALL.length+' sets':'';
+ if(!ALL.length){g.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="big">🔍</div><p>No sets found.</p></div>`;return}
+ g.innerHTML=ALL.map((s,i)=>`<div class="vcard" ${s.mine?`data-a="openmine" data-i="${i}" role="button" tabindex="0"`:''} style="${s.mine?'':'cursor:default'}"><div class="vc1"><div class="ic">${esc(s.icon||'📚')}</div><div style="min-width:0;flex:1"><b>${esc(s.name)}</b><div class="own ${s.mine?'me':''}">👤 ${s.mine?'You':esc(s.owner)}</div><div class="cnt"><span>🖼️ ${s.n.w}</span><span>📝 ${s.n.s}</span><span>💬 ${s.n.d}</span><span>📖 ${s.n.t}</span></div></div></div><div class="strip">${s.strip.map(w=>`<span>${w.img?`<img src="${esc(w.img)}" alt="" loading="lazy">`:esc(w.e||'·')}</span>`).join('')}</div><div class="vca">${s.mine?`<button class="ib" data-a="openmine" data-i="${i}">✏️ <span class="lb">Edit</span></button>`:`<button class="ib pri" data-a="copyset" data-i="${i}">⧉ <span class="lb">Copy to my sets</span></button>`}</div></div>`).join('')}
+async function copyShared(i){const x=ALL[i];if(!x)return;const key='u'+x.u+':'+x.id;const have=(await VS.all()).find(s=>s.from===key);
+ if(have&&!confirm(`"${x.name}" is already in your sets. Make another copy?`)){LTAB='my';openSet(have.id);return}
+ try{const r=await VS.cloud.shared(x.u,x.id);const s=r.set;s.id=VS.uid();s.from=key;s.by=r.owner;delete s.created;await VS.put(s);toast('⧉ Copied "'+esc(s.name)+'" from '+esc(r.owner));LTAB='my';openSet(s.id)}catch(e){toast('⚠️ '+esc(e.message))}}
+function renderLib(){libTabs();if(LTAB==='all')return renderAll();const g=$('grid');$('libn').textContent=SETS.length?SETS.length+' sets':'';
  if(!SETS.length){g.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="big">📚🖼️🔤</div><h2 style="margin:0">Make your first vocab set</h2><p>Words + pictures + IPA + meaning. Then print them as worksheets.</p><div class="row"><button class="ib pri" data-a="new">＋ New set</button><button class="ib" data-a="demo">🍎 Try a sample</button><button class="ib" data-a="import">⬆️ Import Bingo backup</button></div></div>`;return}
  g.innerHTML=SETS.map(s=>{const c=counts(s);return`<div class="vcard" data-open="${s.id}" role="button" tabindex="0"><div class="vc1"><div class="ic">${esc(s.icon||'📚')}</div><div style="min-width:0;flex:1"><b>${esc(s.name)}</b><div class="cnt"><span>🖼️ ${c.w}</span><span>📝 ${c.s}</span><span>💬 ${c.d}</span><span>📖 ${c.t}</span></div></div></div><div class="strip">${s.words.slice(0,8).map(w=>`<span>${w.img?`<img src="${w.img}" alt="">`:esc(w.e||'·')}</span>`).join('')}</div><div class="vca"><button class="ib" data-open="${s.id}">✏️ <span class="lb">Edit</span></button><a class="ib pri" href="worksheets.html?set=${s.id}" style="text-decoration:none" data-cur="${s.id}">🖨️ <span class="lb">Print</span></a></div></div>`}).join('')}
 
 /* =================== EDITOR =================== */
 async function openSet(id){const s=await VS.get(id);if(!s){toast('Set not found');return showLib()}SET=s;['words','sen','dlg','sto'].forEach(k=>{if(SET[k]==null)SET[k]=k==='words'?[]:''});SET.ipa=SET.ipa||{};VS.cur.set(id);
- $('vLib').hidden=true;$('vEd').hidden=false;history.replaceState(null,'','?set='+id);renderEd();scrollTo(0,0)}
+ $('vLib').hidden=true;$('vEd').hidden=false;history.replaceState(null,'','?set='+id);renderEd();saveUI('saved');scrollTo(0,0)}
 function renderEd(){document.title=SET.name+' · Vocab Sets';$('edIcon').innerHTML=`<span class="bigemo">${esc(SET.icon||'📚')}</span>`;const n=$('edName');if(document.activeElement!==n)n.value=SET.name;$('edPrint').href='worksheets.html?set='+SET.id;renderTabs();renderSide();renderPane()}
 function renderTabs(){const c=counts(SET);$('tabs').innerHTML=[['w','🖼️','Words',c.w],['s','📝','Sentences',c.s],['d','💬','Talk',c.d],['t','📖','Stories',c.t]].map(t=>`<button class="${TAB===t[0]?'on':''}" data-tab="${t[0]}"><span class="e">${t[1]}</span>${t[2]} <span class="n">${t[3]}</span></button>`).join('')}
 function sideHTML(){const c=counts(SET),need={w:c.w>=2,s:c.s>0,d:c.d>0,t:c.t>0};
@@ -552,7 +576,7 @@ async function cloudGo(m){const n=($('cln').value||'').trim(),p=$('clp').value||
  const b=document.querySelector('[data-a="cl-go"]');if(b){b.disabled=true;b.textContent='⏳ …'}
  try{if(m==='new')await VS.cloud.register(n,p,($('cli').value||'').trim());else await VS.cloud.signin(n,p);closeSheet();toast('☁️ Signed in as '+esc(VS.cloud.st.name)+'. Sets are saved online.')}
  catch(er){toast('⚠️ '+esc(er.message));if(b){b.disabled=false;b.textContent=m==='new'?'✨ Create account':'🔑 Sign in'}}}
-addEventListener('vs-cloud',async e=>{const d=e.detail||{};cloudUI(d);
+addEventListener('vs-cloud',async e=>{const d=e.detail||{};cloudUI(d);if(d.synced&&SET&&!saveT)saveUI('saved');if(d.state==='on'&&!d.synced&&LTAB==='all'&&!$('vLib').hidden&&!ALL.length)loadAll();
  if(d.signedOut)toast('☁️ Please sign in again');
  if(d.pushed&&SET&&SET.id===d.pushed.id){const m=new Map((d.pushed.words||[]).map(w=>[w.id,w.img]));for(const w of SET.words){const u=m.get(w.id);if(u&&/^data:/.test(w.img||'')&&/^https:/.test(u))w.img=u}}
  if(d.changed){if(!$('vLib').hidden){SETS=await VS.all();renderLib()}
@@ -575,6 +599,11 @@ document.addEventListener('click',async e=>{const t=e.target;
    if(m==='paste')pasteSheet();else if(m==='ai')aiWordsSheet();else if(m==='pics')$('fImgs').click();else if(m==='cut')CUT.pick();else setTimeout(()=>$('addw').focus(),100);break}
   case 'settings':settingsSheet();break;
   case 'cloud':cloudSheet();break;
+  case 'savenow':saveNow();break;
+  case 'lt-my':LTAB='my';renderLib();break;
+  case 'lt-all':LTAB='all';loadAll();break;
+  case 'copyset':copyShared(+b.dataset.i);break;
+  case 'openmine':{const x=ALL[+b.dataset.i];if(x){LTAB='my';openSet(x.id)}break}
   case 'cl-in':case 'cl-new':cloudSheet(a==='cl-new'?'new':'in');break;
   case 'cl-go':cloudGo(b.dataset.m);break;
   case 'cl-sync':VS.cloud.sync().then(()=>{toast('☁️ Synced');cloudSheet()},er=>toast('⚠️ '+esc(er.message)));break;
@@ -637,6 +666,7 @@ document.addEventListener('paste',async e=>{if(PICK<0)return;const f=[...(e.clip
 
 /* ---------- start ---------- */
 cloudUI();
+$('allq').addEventListener('input',()=>{clearTimeout(allT);allT=setTimeout(loadAll,300)});
 (async()=>{const q=new URLSearchParams(location.search);try{if(q.get('set'))await openSet(q.get('set'));else await showLib();if(q.get('new'))newSheet()}catch(e){document.body.insertAdjacentHTML('afterbegin',`<p style="padding:16px;color:#b00">⚠️ This browser blocked local storage (${esc(e.message)}). Try a normal (not private) window.</p>`)}})();
 window.addEventListener('pagehide',()=>{if(SET)save(true)});
 })();
