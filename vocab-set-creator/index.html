@@ -559,25 +559,40 @@ Strict Rules for Quality Fill-in-the-Blank Items:
 Focus on the vocabulary theme: {theme}.
 Target vocabulary list: {words}.
 
-Create {count} dialogue items using this exact single-line format:
+Create exactly ONE dialogue item for EVERY word in the list, using this exact single-line format:
 Question | Answer | wrong1 | wrong2
 
-Strict Rules for Quality Distractors:
-1. NO grammar errors in any column. Every choice must be 100% grammatically correct so students cannot guess the answer using grammar clues.
-2. Same Topic & Structure: Both wrong1 and wrong2 must answer the same Wh-question type (What, Where, When, Who, How) and use the same sentence structure and length as the correct Answer.
-3. Semantic Mismatch Only: Create wrong1 and wrong2 using other vocabulary words from the same theme (Lexical Set) that create a factual mismatch (e.g., wrong location, wrong action, wrong tool, or wrong role).
-4. Plausible & Clear: Make the distractors sound like natural English sentences, clearly false in real-world meaning, but realistic enough to test true vocabulary comprehension.
-5. Output ONLY the raw lines separated by " | " with no numbering, bullet points, headers, or extra explanations.`,
+Mix these three question styles, about one third each, in random order:
+A) Situation: a real-life Wh-question where the target word is the natural answer (e.g. "What should I use to open this bottle?" | "You should use the corkscrew.").
+B) Describe it: describe the target word without naming it, then ask the matching question. Adapt to the word type:
+   - Thing: shape, size, parts, material → "What is it?"
+   - Place: what you see or do there → "Where am I?"
+   - Person/job: what they do, wear, or use → "Who am I?"
+   - Feeling: a situation that causes it, or how the face/body shows it → "How do I feel?"
+   Answer: "It is a [word]." / "You are at the [word]." / "You are a [word]." / "You feel [word]."
+C) Give the word, ask about it. Adapt to the word type:
+   - Thing: "What do you do with a [word]?"
+   - Place: "What can you do at a [word]?"
+   - Person/job: "What does a [word] do?"
+   - Feeling: "When do people feel [word]?"
+   Answer: a short, true sentence.
+
+Strict rules:
+1. Avoid easy clue words: in styles B and C the question must NOT contain words commonly paired with the answer (e.g. "soup" for ladle). In style A keep clues light.
+2. Close distractors: wrong1 and wrong2 are other words from the same theme that are easy to confuse with the answer (similar shape, same place, similar job), and still sound possible.
+3. Same form: all three choices use the same sentence pattern, the same length (±2 words), and no extra adjectives on only one choice.
+4. 100% correct grammar in every choice; CEFR A1–B1 English.
+5. Output ONLY the raw lines separated by " | ", with no numbering, headers or explanations.`,
  wrong:`Act as an expert ESL/EFL assessment designer.
 Focus on the vocabulary theme: {theme}.
 Target vocabulary list: {words}.
 
 For each item below (question + correct answer), write wrong1 and wrong2.
-Strict Rules for Quality Distractors:
-1. NO grammar errors. Every choice must be 100% grammatically correct so students cannot guess the answer using grammar clues.
-2. Same Topic & Structure: wrong1 and wrong2 must answer the same Wh-question type and use the same sentence structure and length as the correct Answer.
-3. Semantic Mismatch Only: use other vocabulary words from the same theme (Lexical Set) to create a factual mismatch (wrong location, wrong action, wrong tool, or wrong role).
-4. Plausible & Clear: natural English sentences, clearly false in real-world meaning, but realistic enough to test true vocabulary comprehension.`,
+Strict rules:
+1. Close distractors: wrong1 and wrong2 use other words from the same theme that are easy to confuse with the answer (similar shape, same place, similar job), and still sound possible, but are clearly wrong for this question.
+2. Same form: all three choices use the same sentence pattern, the same length (±2 words), and no extra adjectives on only one choice.
+3. 100% correct grammar in every choice, so students cannot guess from grammar; CEFR A1–B1 English.
+4. Do not repeat words from the question that would give the answer away.`,
  sto:`Write 3 very short picture stories for young {learn} learners using some of these words: {words}.
 Each story: a short title, the closest scene (one of: {scenes}), 2–3 simple sentences, and 3 questions (who/what/where/yes-no) with short accepted answers and a full-sentence model answer.`};
 const PR_NAME={sen:'✨ Make sentences from words',dlg:'✨ Make dialogues from words',wrong:'✨ Tricky wrong answers',sto:'✨ Make stories from words'};
