@@ -398,7 +398,15 @@ const picHTML=(w,cls)=>w.img?`<img src="${w.img}" alt="">`:w.e?esc(w.e):`<span c
 function speak(t,lang){if(!t||!window.speechSynthesis)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t),l=LG(lang||SET?.lang||'en')[3];u.lang=l;u.rate=.9;const v=speechSynthesis.getVoices().find(v=>v.lang.replace('_','-').toLowerCase().startsWith(l.slice(0,2).toLowerCase()));if(v)u.voice=v;speechSynthesis.speak(u)}
 
 /* ---------- free look-ups (no key) ---------- */
-async function freeIPA(w){try{const r=await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(w.toLowerCase()));if(!r.ok)return'';const j=await r.json();const ps=(j||[]).flatMap(e=>[e.phonetic,...(e.phonetics||[]).map(p=>p.text)]).filter(Boolean);const uk=(j||[]).flatMap(e=>(e.phonetics||[]).filter(p=>/-uk\./.test(p.audio||'')&&p.text).map(p=>p.text));return String(uk[0]||ps[0]||'').replace(/^[\/\[]|[\/\]]$/g,'')}catch(e){return''}}
+async function dictIPA(w){try{const r=await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(w.toLowerCase()));if(!r.ok)return'';const j=await r.json();const ps=(j||[]).flatMap(e=>[e.phonetic,...(e.phonetics||[]).map(p=>p.text)]).filter(Boolean);const uk=(j||[]).flatMap(e=>(e.phonetics||[]).filter(p=>/-uk\./.test(p.audio||'')&&p.text).map(p=>p.text));return String(uk[0]||ps[0]||'').replace(/^[\/\[]|[\/\]]$/g,'')}catch(e){return''}}
+/* IPA for any entry: whole entry → each word of a phrase → compound split (barber+shop) */
+const IPAC=new Map();
+async function freeIPA(w){w=String(w||'').trim().toLowerCase();if(!w)return'';if(IPAC.has(w))return IPAC.get(w);let r=await dictIPA(w);
+ if(!r){const parts=w.split(/[\s\-–]+/).filter(Boolean);
+  if(parts.length>1){const ps=[];for(const p of parts){const x=await freeIPA(p);if(!x){ps.length=0;break}ps.push(x)}r=ps.join(' ')}
+  else if(/^[a-z]{6,16}$/.test(w)){const cut=[];for(let k=3;k<=w.length-3;k++)cut.push(k);cut.sort((a,b)=>Math.abs(a-w.length/2)-Math.abs(b-w.length/2));
+   for(const k of cut){const a=await dictIPA(w.slice(0,k));if(!a)continue;const b=await dictIPA(w.slice(k));if(b){r=a+b.replace(/^ˈ/,'ˌ');break}}}}
+ IPAC.set(w,r);return r}
 async function freeTr(t,from,to){try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(t)+'&langpair='+from+'|'+to);if(!r.ok)return'';const j=await r.json();const s=j?.responseData?.translatedText||'';return /MYMEMORY|QUERY LENGTH/i.test(s)?'':s}catch(e){return''}}
 
 /* ---------- Gemini (key stays on this device; called straight from the browser) ---------- */
@@ -485,6 +493,7 @@ async function autoFill(ws,quiet){if(filling)return;ws=ws||SET.words;const need=
    for(let s=0;s<need.length;s+=60){const part=need.slice(s,s+60);
     const out=await gemJSON(`You help English teachers. For each ${LG(SET.lang)[2]} word below give: "ipa" (British IPA, no slashes, with stress marks and syllable dots like ˈæp.əl), "m" (short meaning in ${LG(SET.mt)[2]}, 1–3 words, the everyday sense), "e" (ONE emoji that best pictures it, or "" if none fits). Topic of the set: "${SET.name}". Return JSON array of {"w","ipa","m","e"} in the same order.\nWords:\n${part.map(w=>w.w).join('\n')}`);
     (Array.isArray(out)?out:out.words||[]).forEach((o,i)=>{const w=part.find(x=>x.w.toLowerCase()===String(o.w||'').toLowerCase())||part[i];if(!w)return;if(!w.ipa&&o.ipa)w.ipa=String(o.ipa).replace(/^\/|\/$/g,'');if(!w.m&&o.m)w.m=o.m;if(!w.img&&!w.e&&o.e)w.e=o.e})}
+   if(SET.lang==='en')for(const w of need){if(SET?.id!==sid)break;if(!w.ipa)w.ipa=await freeIPA(w.w)}
   }else{
    if(!quiet)toast('🔎 Looking up IPA and meanings…',8000);
    for(const w of need){if(SET?.id!==sid)break;if(!w.e&&!w.img)w.e=emoFor(w.w);
