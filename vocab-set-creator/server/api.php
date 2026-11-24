@@ -1,7 +1,7 @@
 <?php
 /* Bokogo cloud API · english.learn8.co/api/
    SQLite in ../../data/app.db (outside the web root). Pictures go to ../media/<user>/<sha1>.<ext>.
-   Actions (?a=): register, login, me, logout, list, put, del. Auth: "Authorization: Bearer <token>". */
+   Actions (?a=): register, login, me, logout, list, put, del, all (every teacher's sets), get (one shared set). Auth: "Authorization: Bearer <token>". */
 declare(strict_types=1);
 $DATA = realpath(__DIR__ . '/../../data');
 $CFG = require $DATA . '/config.php';           // ['invite'=>'...', 'base'=>'https://english.learn8.co']
@@ -134,6 +134,41 @@ switch ($a) {
     $db->prepare('INSERT INTO sets(uid,id,name,data,updated,deleted) VALUES(?,?,?,?,?,1) ON CONFLICT(uid,id) DO UPDATE SET data=\'{}\',updated=excluded.updated,deleted=1')
        ->execute([$u['id'], $id, '', '{}', $upd]);
     out(['ok' => 1]);
+  }
+  case 'log': {   // browser error reports (no sign-in); capped file in ../../logs
+    $f = __DIR__ . '/../../logs/client.log';
+    if (is_file($f) && filesize($f) > 5 * 1024 * 1024) out(['ok' => 0]);
+    $row = ['t' => gmdate('c'), 'ip' => $_SERVER['REMOTE_ADDR'] ?? ''];
+    foreach (['p' => 300, 'm' => 400, 's' => 300, 'l' => 12, 'c' => 12, 'st' => 1600, 'ua' => 300] as $k => $n) $row[$k] = mb_substr((string)($in[$k] ?? ''), 0, $n);
+    file_put_contents($f, json_encode($row, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
+    out(['ok' => 1]);
+  }
+  case 'all': {   // every teacher's sets (summaries) for the "All vocab sets" page
+    $u = user($db); $q = mb_strtolower(trim((string)($_GET['q'] ?? '')));
+    $st = $db->query('SELECT s.uid,s.id,s.data,s.updated,u.name AS owner FROM sets s JOIN users u ON u.id=s.uid WHERE s.deleted=0 ORDER BY s.updated DESC LIMIT 1000');
+    $list = [];
+    foreach ($st as $r) {
+      $d = json_decode($r['data'], true); if (!is_array($d)) continue;
+      $words = is_array($d['words'] ?? null) ? $d['words'] : [];
+      if ($q !== '') {
+        $hay = mb_strtolower(($d['name'] ?? '') . ' ' . $r['owner'] . ' ' . implode(' ', array_map(fn($w) => is_array($w) ? (string)($w['w'] ?? '') : '', $words)));
+        if (mb_strpos($hay, $q) === false) continue;
+      }
+      $lines = fn($t) => count(array_filter(array_map('trim', explode("\n", (string)$t)), 'strlen'));
+      $list[] = ['u' => (int)$r['uid'], 'owner' => $r['owner'], 'mine' => (int)$r['uid'] === (int)$u['id'], 'id' => $r['id'],
+        'name' => (string)($d['name'] ?? ''), 'icon' => (string)($d['icon'] ?? '📚'), 'updated' => (int)$r['updated'],
+        'n' => ['w' => count($words), 's' => $lines($d['sen'] ?? ''), 'd' => $lines($d['dlg'] ?? ''), 't' => count(array_filter(preg_split('/\n\s*\n/', (string)($d['sto'] ?? '')), fn($b) => trim($b) !== ''))],
+        'strip' => array_map(fn($w) => ['img' => (is_string($w['img'] ?? null) && str_starts_with($w['img'], 'http')) ? $w['img'] : '', 'e' => (string)($w['e'] ?? '')], array_slice(array_values(array_filter($words, 'is_array')), 0, 8))];
+      if (count($list) >= 300) break;
+    }
+    out(['sets' => $list]);
+  }
+  case 'get': {   // one set from any teacher (to copy into my sets)
+    user($db);
+    $st = $db->prepare('SELECT s.data,u.name AS owner FROM sets s JOIN users u ON u.id=s.uid WHERE s.uid=? AND s.id=? AND s.deleted=0');
+    $st->execute([(int)($_GET['u'] ?? 0), (string)($_GET['id'] ?? '')]); $r = $st->fetch();
+    if (!$r) fail('Set not found', 404);
+    out(['set' => json_decode($r['data'], true), 'owner' => $r['owner']]);
   }
   default: out(['app' => 'bokogo', 'ok' => 1]);
 }
