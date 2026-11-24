@@ -9,7 +9,7 @@ function useSet(v){
  window.VSET=v;
  window.VTOPIC=(v.icon||'📚')+' '+v.name;
  // W rows = [word, picture (emoji or <img>), IPA] — same shape as the worksheet demo data
- window.VSET_W=v.words.filter(w=>w.w&&w.w.trim()).map(w=>[w.w.trim(),w.img?`<img class="vi" src="${w.img}" alt="">`:(w.e||'🖼️'),w.ipa||'']);
+ window.VSET_W=v.words.filter(w=>w.w&&w.w.trim()).map(w=>[w.w.trim(),w.img?`<img class="vi" src="${w.img}" alt="">`:(w.e||'🖼️'),w.ipa||'',w.m||'']);
  // 📖 story cards (stories.js): their pictures go to R7 by story order
  if(Array.isArray(v.stories)&&window.STO){v.sto=window.STO.toSto(v.stories);v._stoGen=v.sto}
  window.VSET_STOIMG=(v.stories||[]).map(x=>x&&x.pic&&x.pic.img||'');

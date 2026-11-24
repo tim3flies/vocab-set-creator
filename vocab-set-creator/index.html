@@ -400,16 +400,20 @@ const picHTML=(w,cls)=>w.img?`<img src="${w.img}" alt="">`:w.e?esc(w.e):`<span c
 function speak(t,lang){if(!t||!window.speechSynthesis)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t),l=LG(lang||SET?.lang||'en')[3];u.lang=l;u.rate=.9;const v=speechSynthesis.getVoices().find(v=>v.lang.replace('_','-').toLowerCase().startsWith(l.slice(0,2).toLowerCase()));if(v)u.voice=v;speechSynthesis.speak(u)}
 
 /* ---------- free look-ups (no key) ---------- */
-async function dictIPA(w){try{const r=await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(w.toLowerCase()));if(!r.ok)return'';const j=await r.json();const ps=(j||[]).flatMap(e=>[e.phonetic,...(e.phonetics||[]).map(p=>p.text)]).filter(Boolean);const uk=(j||[]).flatMap(e=>(e.phonetics||[]).filter(p=>/-uk\./.test(p.audio||'')&&p.text).map(p=>p.text));return String(uk[0]||ps[0]||'').replace(/^[\/\[]|[\/\]]$/g,'')}catch(e){return''}}
+/* American IPA (Nana 25 Nov): CMU Pronouncing Dictionary on our own server (/cmu/a.json …, built by server/cmu_build.py) first, then dictionaryapi.dev US pronunciations. Both free. */
+const CMU={};const cmuBook=k=>CMU[k]||(CMU[k]=fetch(new URL('../cmu/'+k+'.json',location.href)).then(r=>r.ok?r.json():{}).catch(()=>({})));
+async function cmuIPA(w){w=String(w||'').toLowerCase().replace(/’/g,"'").trim();if(!w)return'';const d=await cmuBook(/^[a-z]/.test(w)?w[0]:'_');return d[w]||''}
+async function dictIPA(w){try{const r=await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(w.toLowerCase()));if(!r.ok)return'';const j=await r.json();const us=(j||[]).flatMap(e=>(e.phonetics||[]).filter(p=>/-us\./.test(p.audio||'')&&p.text).map(p=>p.text));return String(us[0]||'').replace(/^[\/\[]|[\/\]]$/g,'')}catch(e){return''}} // US only, so no British IPA slips in
+const oneIPA=async w=>(await cmuIPA(w))||(await dictIPA(w));
 /* IPA for any entry: whole entry → each word of a phrase → compound split (barber+shop) */
 const IPAC=new Map();
-const ABC={a:'eɪ',b:'biː',c:'siː',d:'diː',e:'iː',f:'ef',g:'dʒiː',h:'eɪtʃ',i:'aɪ',j:'dʒeɪ',k:'keɪ',l:'el',m:'em',n:'en',o:'əʊ',p:'piː',q:'kjuː',r:'ɑː',s:'es',t:'tiː',u:'juː',v:'viː',w:'ˈdʌb.əl.juː',x:'eks',y:'waɪ',z:'zed'};
+const ABC={a:'eɪ',b:'biː',c:'siː',d:'diː',e:'iː',f:'ef',g:'dʒiː',h:'eɪtʃ',i:'aɪ',j:'dʒeɪ',k:'keɪ',l:'el',m:'em',n:'en',o:'oʊ',p:'piː',q:'kjuː',r:'ɑːr',s:'es',t:'tiː',u:'juː',v:'viː',w:'ˈdʌb.əl.juː',x:'eks',y:'waɪ',z:'ziː'};
 async function freeIPA(w){const o=String(w||'').trim();if(/^[A-Z]{2,4}$/.test(o)){const L=[...o.toLowerCase()].map(c=>ABC[c]);return L.slice(0,-1).map(x=>'ˌ'+x).join('')+'ˈ'+L[L.length-1]} // TV, DVD, ATM: say the letters
- w=o.toLowerCase();if(!w)return'';if(IPAC.has(w))return IPAC.get(w);let r=await dictIPA(w);
+ w=o.toLowerCase();if(!w)return'';if(IPAC.has(w))return IPAC.get(w);let r=await oneIPA(w);
  if(!r){const parts=o.split(/[\s\-–]+/).filter(Boolean);
   if(parts.length>1){const ps=[];for(const p of parts){const x=await freeIPA(p);if(!x){ps.length=0;break}ps.push(x)}r=ps.join(' ')}
   else if(/^[a-z]{6,16}$/.test(w)){const cut=[];for(let k=3;k<=w.length-3;k++)cut.push(k);cut.sort((a,b)=>Math.abs(a-w.length/2)-Math.abs(b-w.length/2));
-   for(const k of cut){const a=await dictIPA(w.slice(0,k));if(!a)continue;const b=await dictIPA(w.slice(k));if(b){r=a+b.replace(/^ˈ/,'ˌ');break}}}}
+   for(const k of cut){const a=await cmuIPA(w.slice(0,k));if(!a)continue;const b=await cmuIPA(w.slice(k));if(b){r=(/[ˈˌ]/.test(a)?a:'ˈ'+a)+(/^[ˈˌ]/.test(b)?b.replace(/^ˈ/,'ˌ'):'ˌ'+b.replace(/ˈ/,'ˌ'));break}}}}
  IPAC.set(w,r);return r}
 async function freeTr(t,from,to){try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(t)+'&langpair='+from+'|'+to);if(!r.ok)return'';const j=await r.json();const s=j?.responseData?.translatedText||'';return /MYMEMORY|QUERY LENGTH/i.test(s)?'':s}catch(e){return''}}
 
@@ -463,10 +467,10 @@ function sideHTML(){const c=counts(SET),need={w:c.w>=2,s:c.s>0,d:c.d>0,t:c.t>0};
  </div>`}
 function renderSide(){$('side').innerHTML=sideHTML()}
 function renderTools(){const T=$('tools');
- if(TAB==='w')T.innerHTML=`<button class="chip" data-a="fill">✨ Auto-fill IPA · meaning · picture</button>${(()=>{const n=SET.words.filter(w=>w.w&&!String(w.ipa||'').trim()).length;return `<button class="chip${n?' warn':''}" data-a="fillipa" title="Find words with no IPA and fill only those">🔤 Check IPA${n?` · ${n} missing`:' ✓'}</button>`})()}<button class="chip" data-a="paste">📋 Paste list</button><button class="chip" data-a="pics">🖼️ Add pictures</button><button class="chip" data-a="cutsheet">🧩 Cut picture sheet</button><button class="chip ai" data-a="aiwords">✨ AI word list</button><button class="chip ai" data-a="aipics">🎨 AI pictures</button>`;
- else if(TAB==='s')T.innerHTML=`<button class="chip ai" data-a="aisen">✨ Make sentences from words</button><button class="chip" data-a="trsen">🌐 Fill missing meanings</button><button class="chip" data-a="ipasen">🔤 Get IPA for sentence words</button>`;
- else if(TAB==='d')T.innerHTML=`<button class="chip ai" data-a="aidlg">✨ Make dialogues from words</button><button class="chip ai" data-a="aiwrong">✨ Tricky wrong answers</button>`;
- else T.innerHTML=STO.tools()}
+ if(TAB==='w')T.innerHTML=`<button class="chip" data-a="fill">✨ Auto-fill IPA · meaning · picture</button>${(()=>{const n=SET.words.filter(w=>w.w&&!String(w.ipa||'').trim()).length;return `<button class="chip${n?' warn':''}" data-a="fillipa" title="Find words with no IPA and fill only those">🔤 Check IPA${n?` · ${n} missing`:' ✓'}</button>`})()}<button class="chip" data-a="usipa" title="Look up every word again in the American dictionaries (CMU, then dictionaryapi.dev US)">🇺🇸 Make IPA American</button><button class="chip" data-a="paste">📋 Paste list</button><button class="chip" data-a="pics">🖼️ Add pictures</button><button class="chip" data-a="cutsheet">🧩 Cut picture sheet</button><button class="chip ai" data-a="aiwords">✨ AI word list</button><button class="chip ai" data-a="aipics">🎨 AI pictures</button>`;
+ else if(TAB==='s')T.innerHTML=`<button class="chip ai" data-a="aisen">✨ Make sentences from words</button><button class="chip" data-a="trsen">🌐 Fill missing meanings</button><button class="chip" data-a="ipasen">🔤 Get IPA for sentence words</button>${prChip('sen')}`;
+ else if(TAB==='d')T.innerHTML=`<button class="chip ai" data-a="aidlg">✨ Make dialogues from words</button><button class="chip ai" data-a="aiwrong">✨ Tricky wrong answers</button>${prChip('dlg,wrong')}`;
+ else T.innerHTML=STO.tools()+prChip('sto')}
 function renderPane(){renderTools();$('addbar').hidden=TAB!=='w';const P=$('pane');
  if(TAB==='w'){const mt=LG(SET.mt),ln=LG(SET.lang);
   P.innerHTML=`<div class="dropzone">🖼️ Drop pictures here · file name = word (apple.png → apple)</div>
@@ -485,7 +489,7 @@ function txHTML(k,help,ex){return`<div class="tx"><details class="fmt"><summary>
 function hiWords(t){const ws=SET.words.map(w=>w.w.toLowerCase()).filter(Boolean);return esc(t).replace(/\[([^\]]+)\]/g,'<span class="bl">$1</span>').replace(/[A-Za-z'’-]+/g,m=>{const l=m.toLowerCase();return ws.some(w=>l===w||l===w+'s'||l===w+'es'||l.replace(/ies$/,'y')===w)?`<mark>${m}</mark>`:m})}
 function senIPA(en){return en.replace(/\[([^\]]+)\]/g,'$1').replace(/[.?!,"“”]/g,'').split(/\s+/).filter(Boolean).map(w=>{const l=w.toLowerCase().replace(/’/g,"'");const x=SET.words.find(v=>v.w.toLowerCase()===l);return (x&&x.ipa)||SET.ipa[l]||'…'}).join(' ')}
 function renderPv(){const pv=$('pv');if(!pv)return;
- if(TAB==='s'){const L=VS.lines(SET.sen);pv.innerHTML=L.length?`<div class="cntline"><b>${L.length} sentences</b>${L.length>24?'<span class="badge warn">worksheets use the first 24</span>':''}${L.some(l=>!l.includes('|'))?`<span class="badge warn">${L.filter(l=>!l.includes('|')).length} without meaning</span>`:''}</div>`+L.map((l,i)=>{const [en,th]=l.split('|').map(x=>(x||'').trim());return`<div class="pvr"><span class="no">${i+1}</span><div><div class="en">${hiWords(en)}</div><div class="ip">/${esc(senIPA(en))}/</div></div><div class="th ${th?'':'miss'}">${th?esc(th):'— meaning?'}</div><button class="mini" data-say="${esc(en.replace(/[\[\]]/g,''))}">🔊</button></div>`}).join(''):''}
+ if(TAB==='s'){const L=VS.lines(SET.sen);pv.innerHTML=L.length?`<div class="cntline"><b>${L.length} sentences</b>${L.some(l=>!l.includes('|'))?`<span class="badge warn">${L.filter(l=>!l.includes('|')).length} without meaning</span>`:''}</div>`+L.map((l,i)=>{const [en,th]=l.split('|').map(x=>(x||'').trim());return`<div class="pvr"><span class="no">${i+1}</span><div><div class="en">${hiWords(en)}</div><div class="ip">/${esc(senIPA(en))}/</div></div><div class="th ${th?'':'miss'}">${th?esc(th):'— meaning?'}</div><button class="mini" data-say="${esc(en.replace(/[\[\]]/g,''))}">🔊</button></div>`}).join(''):''}
  else if(TAB==='d'){const L=VS.lines(SET.dlg),D=L.map(VS.dlgParse);pv.innerHTML=D.map(({q,a,wr},i)=>{const oth=D.filter((e,j)=>j!==i&&e.a&&e.a!==a).map(e=>({q:e.q,a:e.a})),ws=a?VS.dlgWrongs(q,a,wr,oth,i,SET.words.map(w=>w.w)).slice(0,3):[];return`<div class="pvr"><span class="no">${i+1}</span><div class="en">🅰️ ${hiWords(q)}</div><div class="en">${a?'🅱️ '+hiWords(a):'<span class="th miss">— answer?</span>'}${ws.length?`<div class="th" style="font-size:12.5px;font-family:system-ui,sans-serif;margin-top:3px;line-height:1.35">${ws.map((w,k)=>`<div style="${k<wr.length?'color:#b42318':'color:#94a3b8'}">✗ ${esc(w)}</div>`).join('')}</div>`:''}</div><button class="mini" data-say="${esc(q+' '+(a||''))}">🔊</button></div>`}).join('')}
  else{const B=String(SET.sto||'').split(/\n\s*\n/).filter(b=>b.trim());pv.innerHTML=B.map((b,i)=>{const ls=b.split('\n').map(l=>l.trim()).filter(Boolean);const pic=(ls.find(l=>/^\[pic:/i.test(l))||'').replace(/^\[pic:|\]$/gi,'');const st=ls.filter(l=>!/^\[pic:/i.test(l)&&!/^Q\s*\d*\s*[:.]/i.test(l)).join(' ');const qs=ls.filter(l=>/^Q\s*\d*\s*[:.]/i.test(l));return`<div class="story"><div class="cntline"><b>Story ${i+1}</b>${pic?`<span class="badge">🖼️ ${esc(pic)}</span>`:''}<span class="badge ${qs.length?'ok':'warn'}">❓ ${qs.length}</span></div><div class="st">${hiWords(st)}</div>${qs.map(q=>{const [qq,a,f]=q.replace(/^Q\s*\d*\s*[:.]\s*/i,'').split('|').map(x=>(x||'').trim());return`<div class="q"><b>Q</b> ${esc(qq)} <small>→ ${esc(a||'?')}${f?' · '+esc(f):''}</small></div>`}).join('')}</div>`}).join('')}}
 
@@ -503,8 +507,9 @@ async function autoFill(ws,quiet){if(filling)return;ws=ws||SET.words;const need=
  filling=true;const sid=SET.id;let done=0;
  try{
   if(hasKey()){if(!quiet)toast('✨ Asking AI…',8000);
+   if(SET.lang==='en')for(const w of need){if(SET?.id!==sid)break;if(!w.ipa)w.ipa=await freeIPA(w.w)} // free US dictionaries first, AI only fills what they miss
    for(let s=0;s<need.length;s+=60){const part=need.slice(s,s+60);
-    const out=await gemJSON(`You help English teachers. For each ${LG(SET.lang)[2]} word below give: "ipa" (British IPA, no slashes, with stress marks and syllable dots like ˈæp.əl), "m" (short meaning in ${LG(SET.mt)[2]}, 1–3 words, the everyday sense), "e" (ONE emoji that best pictures it, or "" if none fits). Topic of the set: "${SET.name}". Return JSON array of {"w","ipa","m","e"} in the same order.\nWords:\n${part.map(w=>w.w).join('\n')}`);
+    const out=await gemJSON(`You help English teachers. For each ${LG(SET.lang)[2]} word below give: "ipa" (American IPA, Cambridge US style, no slashes, with stress marks and syllable dots like ˈæp.əl), "m" (short meaning in ${LG(SET.mt)[2]}, 1–3 words, the everyday sense), "e" (ONE emoji that best pictures it, or "" if none fits). Topic of the set: "${SET.name}". Return JSON array of {"w","ipa","m","e"} in the same order.\nWords:\n${part.map(w=>w.w).join('\n')}`);
     (Array.isArray(out)?out:out.words||[]).forEach((o,i)=>{const w=part.find(x=>x.w.toLowerCase()===String(o.w||'').toLowerCase())||part[i];if(!w)return;if(!w.ipa&&o.ipa)w.ipa=String(o.ipa).replace(/^\/|\/$/g,'');if(!w.m&&o.m)w.m=o.m;if(!w.img&&!w.e&&o.e)w.e=o.e})}
    if(SET.lang==='en')for(const w of need){if(SET?.id!==sid)break;if(!w.ipa)w.ipa=await freeIPA(w.w)}
   }else{
@@ -525,7 +530,7 @@ async function fillIPA(){if(filling)return;const sid=SET.id,need=SET.words.filte
  try{
   if(SET.lang==='en')for(const w of need){if(SET?.id!==sid)break;w.ipa=await freeIPA(w.w)}
   const left=need.filter(w=>!w.ipa);
-  if(left.length&&hasKey()&&SET?.id===sid){try{const out=await gemJSON(`Give the British IPA (no slashes, with stress marks and syllable dots like ˈæp.əl) for each ${LG(SET.lang)[2]} word or phrase below. Return a JSON array of {"w","ipa"} in the same order.\nWords:\n${left.map(w=>w.w).join('\n')}`);
+  if(left.length&&hasKey()&&SET?.id===sid){try{const out=await gemJSON(`Give the American IPA (Cambridge US style, no slashes, with stress marks and syllable dots like ˈæp.əl) for each ${LG(SET.lang)[2]} word or phrase below. Return a JSON array of {"w","ipa"} in the same order.\nWords:\n${left.map(w=>w.w).join('\n')}`);
    (Array.isArray(out)?out:out.words||[]).forEach((o,i)=>{const w=left.find(x=>x.w.toLowerCase()===String(o.w||'').toLowerCase())||left[i];if(w&&!w.ipa&&o.ipa)w.ipa=String(o.ipa).replace(/^\/|\/$/g,'').trim()})}catch(e){}}
   if(SET?.id===sid){save();renderEd()}
   const still=need.filter(w=>!w.ipa),got=need.length-still.length;
@@ -533,19 +538,62 @@ async function fillIPA(){if(filling)return;const sid=SET.id,need=SET.words.filte
  }catch(e){toast('⚠️ '+esc(e.message),5000)}finally{filling=false}}
 
 /* ✨ Tricky wrong answers (Nana 24 Nov): for Talk lines with no wrongs, AI writes 2 near-misses about the SAME subject */
-async function aiWrongs(btn){if(!hasKey()){settingsSheet();toast('Add a Gemini key first · without one the worksheet still makes a grammar slip + a wrong-type reply');return}
- const L=VS.lines(SET.dlg),D=L.map(VS.dlgParse),need=D.map((d,i)=>[d,i]).filter(([d])=>d.q&&d.a&&!d.wr.length);if(!need.length){toast('✅ Every dialogue already has wrong answers');return}
- const old=btn.innerHTML;btn.disabled=true;btn.innerHTML='⏳ Making…';
- try{const out=await gemJSON(`Act as an expert ESL/EFL assessment designer.
-Focus on the vocabulary theme: ${SET.name}.
-Target vocabulary list: ${wordList()}.
+/* ✍️ Editable AI prompts (Nana 25 Nov): 🧠 Prompt chip on Sentences / Talk / Stories. Kept on this device (CFG.pr); empty = default.
+   Placeholders: {theme} set name · {words} all set words · {count} 10–20 · {learn} learning language · {meaning} mother tongue · {example} " | ฉันชอบแอปเปิล" for Thai · {scenes} story scenes */
+const PR_DEF={sen:`Act as an expert ESL/EFL assessment designer.
+Focus on the vocabulary theme: {theme}.
+Target vocabulary list: {words}.
+
+Create exactly ONE sentence for EVERY single word in the target vocabulary list above (1:1 match with the total number of words provided).
+
+Use this exact single-line format:
+{learn} sentence with the target word in [brackets] | Natural {meaning} translation
+
+Strict Rules for Quality Fill-in-the-Blank Items:
+1. Complete Coverage: Do not skip any word from the target list. Use each target word in its exact base form inside [brackets] (e.g., I like [apples].{example}).
+2. Strong Context Clues: Every sentence must include clear surrounding context clues from the theme so the learner can logically deduce the missing word without guessing.
+3. Natural & Clear {learn}: Use level-appropriate, natural everyday {learn} (CEFR A1–B1) with 100% accurate grammar.
+4. Accurate {meaning} Meaning: Provide a natural, accurate {meaning} translation of the complete sentence on the right side of the pipe " | ".
+5. Output ONLY the raw lines separated by " | " with no numbering, bullet points, headers, or extra explanations.`,
+ dlg:`Act as an expert ESL/EFL assessment designer.
+Focus on the vocabulary theme: {theme}.
+Target vocabulary list: {words}.
+
+Create {count} dialogue items using this exact single-line format:
+Question | Answer | wrong1 | wrong2
+
+Strict Rules for Quality Distractors:
+1. NO grammar errors in any column. Every choice must be 100% grammatically correct so students cannot guess the answer using grammar clues.
+2. Same Topic & Structure: Both wrong1 and wrong2 must answer the same Wh-question type (What, Where, When, Who, How) and use the same sentence structure and length as the correct Answer.
+3. Semantic Mismatch Only: Create wrong1 and wrong2 using other vocabulary words from the same theme (Lexical Set) that create a factual mismatch (e.g., wrong location, wrong action, wrong tool, or wrong role).
+4. Plausible & Clear: Make the distractors sound like natural English sentences, clearly false in real-world meaning, but realistic enough to test true vocabulary comprehension.
+5. Output ONLY the raw lines separated by " | " with no numbering, bullet points, headers, or extra explanations.`,
+ wrong:`Act as an expert ESL/EFL assessment designer.
+Focus on the vocabulary theme: {theme}.
+Target vocabulary list: {words}.
 
 For each item below (question + correct answer), write wrong1 and wrong2.
 Strict Rules for Quality Distractors:
 1. NO grammar errors. Every choice must be 100% grammatically correct so students cannot guess the answer using grammar clues.
 2. Same Topic & Structure: wrong1 and wrong2 must answer the same Wh-question type and use the same sentence structure and length as the correct Answer.
 3. Semantic Mismatch Only: use other vocabulary words from the same theme (Lexical Set) to create a factual mismatch (wrong location, wrong action, wrong tool, or wrong role).
-4. Plausible & Clear: natural English sentences, clearly false in real-world meaning, but realistic enough to test true vocabulary comprehension.
+4. Plausible & Clear: natural English sentences, clearly false in real-world meaning, but realistic enough to test true vocabulary comprehension.`,
+ sto:`Write 3 very short picture stories for young {learn} learners using some of these words: {words}.
+Each story: a short title, the closest scene (one of: {scenes}), 2–3 simple sentences, and 3 questions (who/what/where/yes-no) with short accepted answers and a full-sentence model answer.`};
+const PR_NAME={sen:'✨ Make sentences from words',dlg:'✨ Make dialogues from words',wrong:'✨ Tricky wrong answers',sto:'✨ Make stories from words'};
+const PR_TAIL={wrong:'The app adds after this: the JSON answer format + the dialogues that need wrong answers.',sto:'The app adds after this: the JSON answer format (title, scene, text, questions).'};
+const prRaw=k=>{const v=CFG.pr&&CFG.pr[k];return v&&v.trim()?v:PR_DEF[k]};
+function prompt(k){const ln=LG(SET.lang)[2],mt=LG(SET.mt)[2];
+ return prRaw(k).replace(/\{theme\}/g,SET.name).replace(/\{words\}/g,wordList()).replace(/\{count\}/g,String(Math.max(10,Math.min(20,SET.words.length)))).replace(/\{learn\}/g,ln).replace(/\{meaning\}/g,mt)
+  .replace(/\{example\}/g,SET.mt==='th'?' | ฉันชอบแอปเปิล':'').replace(/\{scenes\}/g,(window.SCENE_IDS||Object.keys(window.SCENES||{kitchen:1,park:1,rain:1})).join(', '))}
+const prChip=ks=>`<button class="chip" data-a="prompt" data-k="${ks}" title="See and change the AI prompt">🧠 Prompt</button>`;
+function promptSheet(ks){const K=ks.split(',');sheet('🧠 AI prompt',`<p class="hint" style="margin:0">Change the words the AI gets, then press the ✨ button again to test. Saved in this browser only. Empty box or ↺ = the default prompt.<br>Filled in for you: <code>{theme}</code> set name · <code>{words}</code> all words · <code>{count}</code> 10–20 · <code>{learn}</code> ${esc(LG(SET.lang)[2])} · <code>{meaning}</code> ${esc(LG(SET.mt)[2])} · <code>{example}</code> Thai example · <code>{scenes}</code> story scenes</p>
+ ${K.map(k=>`<div class="fld"><label>${PR_NAME[k]}${CFG.pr&&CFG.pr[k]&&CFG.pr[k].trim()?' <span class="badge warn">changed</span>':''}</label><textarea data-pr="${k}" spellcheck="false" style="width:100%;min-height:${K.length>1?200:300}px;border:1px solid var(--line);border-radius:12px;padding:10px;font:13px/1.45 ui-monospace,Menlo,monospace">${esc(prRaw(k))}</textarea>${PR_TAIL[k]?`<p class="hint" style="margin:4px 0 0">${PR_TAIL[k]}</p>`:''}<div class="rowb" style="margin-top:6px"><button class="ib" data-a="prreset" data-k="${k}">↺ Default</button><button class="ib" data-a="prsee" data-k="${k}">👁 See it filled in</button></div><pre data-prsee="${k}" hidden style="white-space:pre-wrap;background:var(--soft,#f3f4f6);border-radius:10px;padding:8px;font-size:12px;max-height:220px;overflow:auto"></pre></div>`).join('')}
+ <button class="ib pri" data-a="prsave" data-k="${ks}">💾 Save prompt</button>`);$('sheet').classList.add('wide')}
+async function aiWrongs(btn){if(!hasKey()){settingsSheet();toast('Add a Gemini key first · without one the worksheet still makes a grammar slip + a wrong-type reply');return}
+ const L=VS.lines(SET.dlg),D=L.map(VS.dlgParse),need=D.map((d,i)=>[d,i]).filter(([d])=>d.q&&d.a&&!d.wr.length);if(!need.length){toast('✅ Every dialogue already has wrong answers');return}
+ const old=btn.innerHTML;btn.disabled=true;btn.innerHTML='⏳ Making…';
+ try{const out=await gemJSON(`${prompt('wrong')}
 Return a JSON array of {"i","fact","trap"} with the same i, where fact = wrong1 and trap = wrong2.
 ${need.map(([d,i])=>JSON.stringify({i,q:d.q,a:d.a})).join('\n')}`);
   let n=0;(Array.isArray(out)?out:out.items||[]).forEach(o=>{const i=+o.i;const d=D[i];if(!d||d.wr.length)return;const w=[o.fact,o.trap].map(x=>String(x||'').replace(/\|/g,'/').trim()).filter(Boolean);if(w.length){d.wr=w;n++}});
@@ -603,34 +651,7 @@ function iconSheet(){const opts=[...new Set([...SET.words.map(w=>w.e).filter(Boo
 const wordList=()=>SET.words.map(w=>w.w).join(', ');
 async function aiText(kind,btn){if(!hasKey()){settingsSheet();toast('Add a Gemini key first');return}if(!SET.words.length){toast('Add some words first');return}
  const old=btn.innerHTML;btn.disabled=true;btn.innerHTML='⏳ Making…';const mt=LG(SET.mt)[2],ln=LG(SET.lang)[2];
- const P={sen:`Act as an expert ESL/EFL assessment designer.
-Focus on the vocabulary theme: ${SET.name}.
-Target vocabulary list: ${wordList()}.
-
-Create exactly ONE sentence for EVERY single word in the target vocabulary list above (1:1 match with the total number of words provided).
-
-Use this exact single-line format:
-${ln} sentence with the target word in [brackets] | Natural ${mt} translation
-
-Strict Rules for Quality Fill-in-the-Blank Items:
-1. Complete Coverage: Do not skip any word from the target list. Use each target word in its exact base form inside [brackets] (e.g., I like [apples].${SET.mt==='th'?' | ฉันชอบแอปเปิล':''}).
-2. Strong Context Clues: Every sentence must include clear surrounding context clues from the theme so the learner can logically deduce the missing word without guessing.
-3. Natural & Clear ${ln}: Use level-appropriate, natural everyday ${ln} (CEFR A1–B1) with 100% accurate grammar.
-4. Accurate ${mt} Meaning: Provide a natural, accurate ${mt} translation of the complete sentence on the right side of the pipe " | ".
-5. Output ONLY the raw lines separated by " | " with no numbering, bullet points, headers, or extra explanations.`,
-  dlg:`Act as an expert ESL/EFL assessment designer.
-Focus on the vocabulary theme: ${SET.name}.
-Target vocabulary list: ${wordList()}.
-
-Create ${Math.max(10,Math.min(20,SET.words.length))} dialogue items using this exact single-line format:
-Question | Answer | wrong1 | wrong2
-
-Strict Rules for Quality Distractors:
-1. NO grammar errors in any column. Every choice must be 100% grammatically correct so students cannot guess the answer using grammar clues.
-2. Same Topic & Structure: Both wrong1 and wrong2 must answer the same Wh-question type (What, Where, When, Who, How) and use the same sentence structure and length as the correct Answer.
-3. Semantic Mismatch Only: Create wrong1 and wrong2 using other vocabulary words from the same theme (Lexical Set) that create a factual mismatch (e.g., wrong location, wrong action, wrong tool, or wrong role).
-4. Plausible & Clear: Make the distractors sound like natural English sentences, clearly false in real-world meaning, but realistic enough to test true vocabulary comprehension.
-5. Output ONLY the raw lines separated by " | " with no numbering, bullet points, headers, or extra explanations.`,
+ const P={sen:prompt('sen'),dlg:prompt('dlg'),
   sto:`Write 3 very short picture stories for young ${ln} learners using some of these words: ${wordList()}.\nEach story: 2–3 simple sentences, then 3 questions (who/what/where/yes-no).\nFormat EXACTLY:\n[pic:park]\nStory sentences on one line.\nQ: question? | accepted short answer / another accepted answer | full-sentence model answer.\n(blank line between stories). Pick the closest scene with [pic:NAME], NAME one of: ${(window.SCENE_IDS||["kitchen","park","rain"]).join(", ")}. No extra text.`};
  try{const t=await gemText(P[kind]);const add=t.split('\n').map(l=>l.replace(/^\s*[-*\d.)]+\s+(?=\S)/,(m)=>/^\s*\d+[.)]\s+/.test(m)?'':m)).join('\n').trim();
   SET[kind]=(SET[kind]?SET[kind].replace(/\s+$/,'')+(kind==='sto'?'\n\n':'\n'):'')+add;save(true);renderEd();toast('✨ Added');if(kind==='sen')fetchSenIPA(true)}
@@ -640,11 +661,19 @@ async function trSen(btn){const L=SET.sen.split('\n');const miss=L.map((l,i)=>[l
  try{if(hasKey()){const out=await gemJSON(`Translate each ${LG(SET.lang)[2]} sentence into natural, simple ${LG(SET.mt)[2]}. Return a JSON array of strings, same order.\n${miss.map(x=>x[0].replace(/[\[\]]/g,'')).join('\n')}`);miss.forEach(([l,i],k)=>{if(out[k])L[i]=l.trim()+' | '+out[k]})}
   else for(const [l,i] of miss){const t=await freeTr(l.replace(/[\[\]]/g,'').trim(),SET.lang,SET.mt);if(t)L[i]=l.trim()+' | '+t}
   SET.sen=L.join('\n');save(true);renderEd();toast('🌐 Meanings added')}catch(e){toast('⚠️ '+esc(e.message))}finally{btn.disabled=false;btn.innerHTML=old}}
+/* 🇺🇸 Make IPA American (Nana 25 Nov): redo every word + sentence word from the free US dictionaries; words they don't know keep their IPA */
+async function usIPA(){if(filling)return;if(SET.lang!=='en'){toast('American IPA is for English sets');return}
+ filling=true;const sid=SET.id;let ch=0;const miss=[];toast('🇺🇸 Looking up American IPA…',8000);
+ try{for(const w of SET.words){if(SET?.id!==sid)break;if(!w.w)continue;const ip=await freeIPA(w.w);if(ip){if(ip!==w.ipa){w.ipa=ip;ch++}}else miss.push(w.w)}
+  for(const k of Object.keys(SET.ipa||{})){if(SET?.id!==sid)break;const ip=await freeIPA(k);if(ip&&ip!==SET.ipa[k]){SET.ipa[k]=ip;ch++}}
+  if(SET?.id===sid){save();renderEd()}
+  toast(`🇺🇸 ${ch} IPA changed to American${miss.length?` · not found, kept: ${esc(miss.slice(0,5).join(', '))}${miss.length>5?'…':''}`:''}`,6000)}
+ catch(e){toast('⚠️ '+esc(e.message),5000)}finally{filling=false}}
 let ipaBusy=false;
 async function fetchSenIPA(quiet){if(ipaBusy||SET.lang!=='en')return;const known=new Set(SET.words.map(w=>w.w.toLowerCase()));const ws=[...new Set(VS.lines(SET.sen).concat(VS.lines(SET.dlg)).flatMap(l=>l.split('|')[0].replace(/[\[\].?!,"“”;:]/g,'').toLowerCase().replace(/’/g,"'").split(/\s+/)).filter(w=>w&&!known.has(w)&&!SET.ipa[w]))];
  if(!ws.length){if(!quiet)toast('✅ All sentence words have IPA');return}ipaBusy=true;const sid=SET.id;
- try{if(hasKey()){const out=await gemJSON(`Give British IPA (no slashes, stress marks, syllable dots) for each English word. Return a JSON object word→ipa.\n${ws.join('\n')}`);Object.entries(out||{}).forEach(([k,v])=>{if(v)SET.ipa[k.toLowerCase()]=String(v).replace(/^\/|\/$/g,'')})}
-  else for(const w of ws.slice(0,80)){if(SET?.id!==sid)break;const ip=await freeIPA(w);if(ip)SET.ipa[w]=ip}
+ try{for(const w of ws.slice(0,300)){if(SET?.id!==sid)break;const ip=await freeIPA(w);if(ip)SET.ipa[w]=ip}
+  const left=ws.filter(w=>!SET.ipa[w]);if(left.length&&hasKey()&&SET?.id===sid){const out=await gemJSON(`Give American IPA (Cambridge US style, no slashes, stress marks, syllable dots) for each English word. Return a JSON object word→ipa.\n${left.join('\n')}`);Object.entries(out||{}).forEach(([k,v])=>{if(v&&!SET.ipa[k.toLowerCase()])SET.ipa[k.toLowerCase()]=String(v).replace(/^\/|\/$/g,'')})}
   if(SET?.id===sid){save();if(TAB==='s')renderPv()}if(!quiet)toast('🔤 IPA added for sentence words')}catch(e){if(!quiet)toast('⚠️ '+esc(e.message))}finally{ipaBusy=false}}
 async function aiPics(btn){if(!hasKey()){settingsSheet();toast('Add a Gemini key first');return}const need=SET.words.filter(w=>!w.img);if(!need.length){toast('✅ Every word has a picture');return}
  const old=btn.innerHTML;btn.disabled=true;let d=0;btn.innerHTML=`⏳ 0/${need.length}`;const sid=SET.id;
@@ -765,15 +794,20 @@ document.addEventListener('click',async e=>{const t=e.target;
   case 'delw':{const w=SET.words[i];SET.words.splice(i,1);save();renderEd();toast(`🗑 ${esc(w.w)} · <button style="background:none;border:0;color:#5eead4;font-weight:800" data-a="undo">Undo</button>`,5000);window._undo=[i,w];break}
   case 'undo':if(window._undo){SET.words.splice(window._undo[0],0,window._undo[1]);window._undo=null;save();renderEd()}break;
   case 'fill':autoFill(null,false);break;
-  case 'fillipa':fillIPA();break;
+  case 'prompt':promptSheet(b.dataset.k);break;
+  case 'prreset':{const ta=document.querySelector(`[data-pr="${b.dataset.k}"]`);if(ta)ta.value=PR_DEF[b.dataset.k];break}
+  case 'prsee':{const k=b.dataset.k,ta=document.querySelector(`[data-pr="${k}"]`),pre=document.querySelector(`[data-prsee="${k}"]`);if(ta&&pre){const keep=CFG.pr;CFG.pr=Object.assign({},keep,{[k]:ta.value});pre.textContent=prompt(k);CFG.pr=keep;pre.hidden=false}break}
+  case 'prsave':{CFG.pr=Object.assign({},CFG.pr);for(const k of b.dataset.k.split(',')){const ta=document.querySelector(`[data-pr="${k}"]`);if(!ta)continue;const v=ta.value.trim();if(!v||v===PR_DEF[k].trim())delete CFG.pr[k];else CFG.pr[k]=ta.value}saveCfg();closeSheet();toast('🧠 Prompt saved · press ✨ to try it');break}
+  case 'fillipa':fillIPA();break;case 'usipa':usIPA();break;
   case 'paste':pasteSheet();break;
   case 'dopaste':{const l=parseLines($('pt').value);closeSheet();addWords(l);break}
   case 'pics':$('fImgs').click();break;
   case 'cutsheet':CUT.pick();break;
   case 'aiwords':aiWordsSheet();break;
   case 'doaiwords':{const pr=$('ap').value.trim();if(!pr)return;b.disabled=true;b.textContent='⏳ Making…';
-   try{const out=await gemJSON(`Make a vocabulary list for English teachers. Request: "${pr}". Learning language: ${LG(SET.lang)[2]}. For each word give "w" (the word, lowercase unless a proper noun), "ipa" (British IPA, no slashes, stress marks and syllable dots), "m" (meaning in ${LG(SET.mt)[2]}, 1–3 words), "e" (ONE emoji that pictures it, or ""). Concrete, picturable words first. Return a JSON array of {"w","ipa","m","e"}.`);
-    const l=(Array.isArray(out)?out:out.words||[]).map(o=>({w:String(o.w||'').trim(),ipa:String(o.ipa||'').replace(/^\/|\/$/g,''),m:o.m||'',e:o.e||''})).filter(x=>x.w);closeSheet();addWords(l,true);toast(`✨ ${l.length} words added`)}
+   try{const out=await gemJSON(`Make a vocabulary list for English teachers. Request: "${pr}". Learning language: ${LG(SET.lang)[2]}. For each word give "w" (the word, lowercase unless a proper noun), "ipa" (American IPA, Cambridge US style, no slashes, stress marks and syllable dots), "m" (meaning in ${LG(SET.mt)[2]}, 1–3 words), "e" (ONE emoji that pictures it, or ""). Concrete, picturable words first. Return a JSON array of {"w","ipa","m","e"}.`);
+    const l=(Array.isArray(out)?out:out.words||[]).map(o=>({w:String(o.w||'').trim(),ipa:String(o.ipa||'').replace(/^\/|\/$/g,''),m:o.m||'',e:o.e||''})).filter(x=>x.w);if(SET.lang==='en')for(const x of l){const ip=await freeIPA(x.w);if(ip)x.ipa=ip} // US dictionary IPA wins over AI
+    closeSheet();addWords(l,true);toast(`✨ ${l.length} words added`)}
    catch(er){toast('⚠️ '+esc(er.message),5000);b.disabled=false;b.textContent='✨ Make words'}break}
   case 'aipics':aiPics(b);break;
   case 'genone':{const w=SET.words[PICK];b.disabled=true;b.textContent='⏳ Drawing…';try{setPic({img:await gemImage(w.w,CFG.sty),ai:true})}catch(er){toast('⚠️ '+esc(er.message),5000)}b.disabled=false;b.textContent='✨ Make picture';break}
@@ -813,7 +847,7 @@ document.addEventListener('paste',e=>{if(SET&&PICK<0)STO.paste(e)});
 document.addEventListener('paste',async e=>{if(PICK<0)return;const f=[...(e.clipboardData?.files||[])].find(f=>/^image\//.test(f.type));if(f){e.preventDefault();setPic({img:await shrink(await fileToData(f))})}});
 
 /* ---------- start ---------- */
-window.VSE={get SET(){return SET},TAB:()=>TAB,save:n=>save(n),sheet,closeSheet,toast,esc,hiWords,LG,LANGS,hasKey,gemJSON,freeTr,speak,settingsSheet,renderTabs,renderSide,renderPane,fileToData};
+window.VSE={get SET(){return SET},prompt,TAB:()=>TAB,save:n=>save(n),sheet,closeSheet,toast,esc,hiWords,LG,LANGS,hasKey,gemJSON,freeTr,speak,settingsSheet,renderTabs,renderSide,renderPane,fileToData};
 cloudUI();
 $('allq').addEventListener('input',()=>{clearTimeout(allT);allT=setTimeout(loadAll,300)});
 (async()=>{const q=new URLSearchParams(location.search);try{if(q.get('set'))await openSet(q.get('set'));else await showLib();if(q.get('new'))newSheet()}catch(e){document.body.insertAdjacentHTML('afterbegin',`<p style="padding:16px;color:#b00">⚠️ This browser blocked local storage (${esc(e.message)}). Try a normal (not private) window.</p>`)}})();
