@@ -403,8 +403,10 @@ function speak(t,lang){if(!t||!window.speechSynthesis)return;speechSynthesis.can
 async function dictIPA(w){try{const r=await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(w.toLowerCase()));if(!r.ok)return'';const j=await r.json();const ps=(j||[]).flatMap(e=>[e.phonetic,...(e.phonetics||[]).map(p=>p.text)]).filter(Boolean);const uk=(j||[]).flatMap(e=>(e.phonetics||[]).filter(p=>/-uk\./.test(p.audio||'')&&p.text).map(p=>p.text));return String(uk[0]||ps[0]||'').replace(/^[\/\[]|[\/\]]$/g,'')}catch(e){return''}}
 /* IPA for any entry: whole entry → each word of a phrase → compound split (barber+shop) */
 const IPAC=new Map();
-async function freeIPA(w){w=String(w||'').trim().toLowerCase();if(!w)return'';if(IPAC.has(w))return IPAC.get(w);let r=await dictIPA(w);
- if(!r){const parts=w.split(/[\s\-–]+/).filter(Boolean);
+const ABC={a:'eɪ',b:'biː',c:'siː',d:'diː',e:'iː',f:'ef',g:'dʒiː',h:'eɪtʃ',i:'aɪ',j:'dʒeɪ',k:'keɪ',l:'el',m:'em',n:'en',o:'əʊ',p:'piː',q:'kjuː',r:'ɑː',s:'es',t:'tiː',u:'juː',v:'viː',w:'ˈdʌb.əl.juː',x:'eks',y:'waɪ',z:'zed'};
+async function freeIPA(w){const o=String(w||'').trim();if(/^[A-Z]{2,4}$/.test(o)){const L=[...o.toLowerCase()].map(c=>ABC[c]);return L.slice(0,-1).map(x=>'ˌ'+x).join('')+'ˈ'+L[L.length-1]} // TV, DVD, ATM: say the letters
+ w=o.toLowerCase();if(!w)return'';if(IPAC.has(w))return IPAC.get(w);let r=await dictIPA(w);
+ if(!r){const parts=o.split(/[\s\-–]+/).filter(Boolean);
   if(parts.length>1){const ps=[];for(const p of parts){const x=await freeIPA(p);if(!x){ps.length=0;break}ps.push(x)}r=ps.join(' ')}
   else if(/^[a-z]{6,16}$/.test(w)){const cut=[];for(let k=3;k<=w.length-3;k++)cut.push(k);cut.sort((a,b)=>Math.abs(a-w.length/2)-Math.abs(b-w.length/2));
    for(const k of cut){const a=await dictIPA(w.slice(0,k));if(!a)continue;const b=await dictIPA(w.slice(k));if(b){r=a+b.replace(/^ˈ/,'ˌ');break}}}}
