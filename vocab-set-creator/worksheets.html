@@ -276,6 +276,7 @@ svg.trw{overflow:visible}:has(>svg.trw){overflow:hidden}
 </div>
 
 <script src="store.js"></script>
+<script src="scenes.js"></script>
 <script>
 window.__wsBoot=(()=>{
 // ---------- data (topic: Fruits, from Learn / Breakie notebook) ----------
@@ -293,47 +294,7 @@ const FR=[['I like ____.','ฉันชอบ ____'],['I don’t like ____.','�
    line 1–3  = story sentences (or one paragraph)
    Q: question | accepted answer / other accepted answer | full-sentence model (optional)
    blank line = next story. Picture = uploaded image, or a built-in scene id: [pic:kitchen] */
-const R7SCN={
-kitchen:`<svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A mom cooking dinner, two children at the table, dad at the office">
-<rect width="400" height="260" fill="#FDF1DC"/><rect y="196" width="400" height="64" fill="#E7C9A0"/><path d="M0 196h400" stroke="#C9A27A" stroke-width="3"/>
-<rect x="24" y="34" width="92" height="74" rx="6" fill="#BFE3F5" stroke="#fff" stroke-width="6"/><path d="M70 34v74M24 71h92" stroke="#fff" stroke-width="4"/><circle cx="96" cy="52" r="9" fill="#FFD66B"/>
-<circle cx="168" cy="40" r="17" fill="#fff" stroke="#8B5A2B" stroke-width="4"/><path d="M168 40v-10M168 40l8 5" stroke="#333" stroke-width="3" stroke-linecap="round"/>
-<rect x="18" y="138" width="138" height="58" rx="4" fill="#9CA3AF"/><rect x="14" y="132" width="146" height="10" rx="3" fill="#6B7280"/><circle cx="50" cy="168" r="10" fill="#374151"/><circle cx="122" cy="168" r="10" fill="#374151"/>
-<rect x="56" y="110" width="52" height="24" rx="6" fill="#E5534B"/><rect x="50" y="106" width="64" height="7" rx="3" fill="#B91C1C"/><path d="M68 98q-6-10 2-18M84 98q-6-10 2-18M100 98q-6-10 2-18" stroke="#9CA3AF" stroke-width="3" fill="none" stroke-linecap="round"/>
-<g><rect x="150" y="122" width="40" height="74" rx="16" fill="#0D9488"/><rect x="156" y="140" width="28" height="44" rx="6" fill="#fff"/><circle cx="170" cy="104" r="20" fill="#F2C9A5"/><path d="M150 102c0-18 10-27 20-27s22 8 22 26c-6-8-12-11-22-11s-14 4-20 12z" fill="#5B3A1E"/><circle cx="163" cy="105" r="2.6" fill="#222"/><circle cx="177" cy="105" r="2.6" fill="#222"/><path d="M164 114q6 5 12 0" stroke="#222" stroke-width="2.4" fill="none" stroke-linecap="round"/>
-<path d="M152 140q-30 0-44-20" stroke="#F2C9A5" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M104 122l-8-26" stroke="#8B5A2B" stroke-width="4" stroke-linecap="round"/></g>
-<rect x="226" y="150" width="150" height="10" rx="3" fill="#8B5A2B"/><rect x="236" y="160" width="8" height="36" fill="#8B5A2B"/><rect x="358" y="160" width="8" height="36" fill="#8B5A2B"/>
-<ellipse cx="268" cy="146" rx="14" ry="4" fill="#fff" stroke="#ccc"/><ellipse cx="334" cy="146" rx="14" ry="4" fill="#fff" stroke="#ccc"/>
-<g><circle cx="256" cy="116" r="15" fill="#F8D9BF"/><path d="M241 114c0-14 7-20 15-20s16 6 16 20c-5-6-9-8-16-8s-10 2-15 8z" fill="#3B2A22"/><rect x="244" y="130" width="24" height="22" rx="8" fill="#F5C842"/><circle cx="251" cy="117" r="2" fill="#222"/><circle cx="261" cy="117" r="2" fill="#222"/><path d="M252 123q4 3 8 0" stroke="#222" stroke-width="2" fill="none" stroke-linecap="round"/></g>
-<g><circle cx="346" cy="118" r="13" fill="#E9B98F"/><path d="M333 116c0-12 6-17 13-17s14 5 14 17c-4-5-8-7-14-7s-9 2-13 7z" fill="#222"/><rect x="335" y="130" width="22" height="22" rx="8" fill="#60A5FA"/><circle cx="341" cy="119" r="2" fill="#222"/><circle cx="351" cy="119" r="2" fill="#222"/></g>
-<g><path d="M262 82q-14 0-16-12" stroke="#94A3B8" stroke-width="2" fill="none" stroke-dasharray="3 4"/><rect x="236" y="14" width="150" height="64" rx="14" fill="#fff" stroke="#94A3B8" stroke-width="2.5"/>
-<rect x="296" y="42" width="58" height="24" rx="3" fill="#CBD5E1"/><rect x="304" y="22" width="40" height="22" rx="3" fill="#334155"/><rect x="308" y="26" width="32" height="14" fill="#7DD3FC"/>
-<circle cx="270" cy="38" r="11" fill="#F2C9A5"/><path d="M259 36c0-9 5-13 11-13s11 4 11 13c-3-4-6-5-11-5s-8 1-11 5z" fill="#5B3A1E"/><rect x="258" y="49" width="24" height="22" rx="7" fill="#1E3A8A"/><path d="M270 49l-3 8 3 4 3-4z" fill="#E5534B"/></g>
-</svg>`,
-park:`<svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A boy with an ice cream and a dog running after a red ball in the park">
-<rect width="400" height="260" fill="#CDEFFF"/><circle cx="340" cy="48" r="26" fill="#FFD66B"/><path d="M40 60q14-14 30 0q14-10 26 2q-28 6-56-2z" fill="#fff"/>
-<rect y="168" width="400" height="92" fill="#8BD48F"/><path d="M0 168q100-24 200 0t200 0v8H0z" fill="#6CC070"/>
-<rect x="48" y="100" width="14" height="76" fill="#8B5A2B"/><circle cx="55" cy="86" r="38" fill="#3FA34D"/><circle cx="30" cy="104" r="22" fill="#3FA34D"/><circle cx="82" cy="102" r="24" fill="#3FA34D"/>
-<g><circle cx="150" cy="122" r="18" fill="#F8D9BF"/><path d="M132 118c0-16 8-22 18-22s19 7 19 22c-6-6-11-8-19-8s-12 2-18 8z" fill="#5B3A1E"/><circle cx="144" cy="123" r="2.4" fill="#222"/><circle cx="156" cy="123" r="2.4" fill="#222"/><path d="M145 131q5 4 10 0" stroke="#222" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-<rect x="134" y="140" width="32" height="40" rx="10" fill="#10B981"/><rect x="138" y="180" width="10" height="26" fill="#1E3A8A"/><rect x="152" y="180" width="10" height="26" fill="#1E3A8A"/>
-<path d="M166 150l18-10" stroke="#F8D9BF" stroke-width="7" stroke-linecap="round"/><path d="M180 140l8 18 8-18z" fill="#E8B26A"/><circle cx="188" cy="134" r="9" fill="#F9A8D4"/></g>
-<g><ellipse cx="268" cy="196" rx="30" ry="14" fill="#C68B5E"/><circle cx="296" cy="182" r="13" fill="#C68B5E"/><path d="M302 172l10-8 0 14z" fill="#8B5A2B"/><circle cx="300" cy="180" r="2" fill="#222"/>
-<path d="M240 192q-14-10-10-22" stroke="#C68B5E" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M250 206l-8 14M262 208l-2 14M278 208l6 13M288 204l12 10" stroke="#C68B5E" stroke-width="6" stroke-linecap="round"/></g>
-<circle cx="350" cy="214" r="12" fill="#E5534B"/><path d="M341 207q9 7 18 0" stroke="#fff" stroke-width="2" fill="none"/>
-<path d="M318 198h10M318 206h14" stroke="#4B5563" stroke-width="2.5" stroke-linecap="round"/>
-</svg>`,
-rain:`<svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ben and Mia at a bus stop in the rain, Mia has a yellow umbrella">
-<rect width="400" height="260" fill="#B8C4D6"/><path d="M30 40q18-18 40 0q18-14 34 2q20-12 36 4q-60 10-110-6z" fill="#8896AB"/><path d="M230 30q18-18 40 0q18-14 34 2q20-12 36 4q-60 10-110-6z" fill="#8896AB"/>
-<g stroke="#E2E8F0" stroke-width="2" stroke-linecap="round">${Array.from({length:42},(_,i)=>`<path d="M${(i*37)%400} ${(i*53)%190+20}l-5 12"/>`).join('')}</g>
-<rect y="200" width="400" height="60" fill="#6B7280"/><path d="M0 200h400" stroke="#9CA3AF" stroke-width="4"/>
-<rect x="40" y="70" width="8" height="130" fill="#374151"/><rect x="200" y="70" width="8" height="130" fill="#374151"/><rect x="30" y="62" width="188" height="14" rx="3" fill="#0D9488"/>
-<rect x="250" y="80" width="6" height="120" fill="#374151"/><rect x="236" y="62" width="34" height="26" rx="4" fill="#fff" stroke="#0D9488" stroke-width="3"/><text x="253" y="81" font-family="Arial" font-weight="700" font-size="14" text-anchor="middle" fill="#0D9488">BUS</text>
-<rect x="60" y="168" width="130" height="8" rx="2" fill="#8B5A2B"/>
-<g><circle cx="96" cy="128" r="15" fill="#F8D9BF"/><path d="M81 126c0-14 7-19 15-19s16 6 16 19c-5-5-9-7-16-7s-10 2-15 7z" fill="#222"/><rect x="82" y="142" width="28" height="36" rx="9" fill="#60A5FA"/><rect x="85" y="178" width="9" height="22" fill="#1E3A8A"/><rect x="98" y="178" width="9" height="22" fill="#1E3A8A"/><circle cx="91" cy="129" r="2" fill="#222"/><circle cx="101" cy="129" r="2" fill="#222"/><path d="M91 137q5-3 10 0" stroke="#222" stroke-width="2" fill="none" stroke-linecap="round"/>
-<path d="M84 104l6 4M100 102l2 6" stroke="#E2E8F0" stroke-width="2" stroke-linecap="round"/></g>
-<g><path d="M120 96q36-36 72 0z" fill="#FACC15"/><path d="M156 96v62" stroke="#374151" stroke-width="3"/><circle cx="156" cy="128" r="15" fill="#E9B98F"/><path d="M141 126c0-14 7-19 15-19s16 6 16 19c-5-5-9-7-16-7s-10 2-15 7z" fill="#5B3A1E"/><path d="M141 124l-6 20M171 124l6 20" stroke="#5B3A1E" stroke-width="5" stroke-linecap="round"/><rect x="142" y="142" width="28" height="36" rx="9" fill="#F472B6"/><rect x="145" y="178" width="9" height="22" fill="#374151"/><rect x="158" y="178" width="9" height="22" fill="#374151"/><circle cx="151" cy="129" r="2" fill="#222"/><circle cx="161" cy="129" r="2" fill="#222"/><path d="M151 135q5 4 10 0" stroke="#222" stroke-width="2" fill="none" stroke-linecap="round"/></g>
-<g><rect x="290" y="150" width="104" height="44" rx="10" fill="#F59E0B"/><rect x="300" y="158" width="20" height="16" rx="3" fill="#BFE3F5"/><rect x="326" y="158" width="20" height="16" rx="3" fill="#BFE3F5"/><rect x="352" y="158" width="20" height="16" rx="3" fill="#BFE3F5"/><circle cx="312" cy="196" r="9" fill="#222"/><circle cx="372" cy="196" r="9" fill="#222"/></g>
-</svg>`};
+const R7SCN=Object.fromEntries(Object.entries(window.SCENES||{}).map(([k,v])=>[k,v.svg])); // 10 drawn scenes live in scenes.js (shared with the Stories editor)
 const R7TXT=`[pic:kitchen]
 Lisa's mom is preparing dinner at home. She's going to eat with her children. Her husband is still at work.
 Q: Who's preparing dinner? | Lisa's mom / her mom / Lisa's mother / mom | Lisa's mom is preparing dinner.
@@ -356,7 +317,7 @@ function r7Parse(txt,imgs){imgs=imgs||{};return txt.split(/\n\s*\n/).map((blk,bi
   if(/^Q\s*\d*\s*[:.]/i.test(l)){const [q,a,full]=l.replace(/^Q\s*\d*\s*[:.]\s*/i,'').split('|').map(x=>(x||'').trim());qs.push({q,acc:(a||'').split('/').map(x=>x.trim()).filter(Boolean),full:full||(a||'').split('/')[0].trim()});return}
   sents.push(...(l.match(/[^.!?]+[.!?]+["”’]?/g)||[l]).map(s=>s.trim()))});
  qs.forEach(q=>q.ev=r7Evidence(q,sents));
- return {pic:imgs[bi]?{img:imgs[bi]}:{scn:R7SCN[pic]?pic:Object.keys(R7SCN)[bi%3]},sents,qs}}).filter(s=>s.sents.length||s.qs.length)}
+ return {pic:imgs[bi]?{img:imgs[bi]}:{scn:R7SCN[pic]?pic:Object.keys(R7SCN)[bi%Object.keys(R7SCN).length]},sents,qs}}).filter(s=>s.sents.length||s.qs.length)}
 const R7STOP=new Set('a an the is are am was were do does did be to of at in on with and but his her their its he she it they i you we what who where when why how which whats whos wheres hes shes its theyre today'.split(' '));
 const r7Norm=s=>s.toLowerCase().replace(/[’']/g,'').replace(/\bmum\b|\bmother\b|\bmommy\b|\bmama\b/g,'mom').replace(/\bcolor\b/g,'colour').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
 const r7Key=s=>r7Norm(s).split(' ').filter(w=>w&&!R7STOP.has(w));
@@ -419,7 +380,7 @@ const SPEC={
  R4:{d:{per:5,ch:3,items:6},c:[DLGT,O('ch','🔢','Choices',[[3,'3'],[4,'4']]),O('per','📑','Per page',[[4,'4'],[5,'5'],[6,'6']])]},
  R5:{d:{per:6,th:1,ans:'write',lines:1,items:8},c:[SENT,O('ans','✍️','Answer by',[['write','✏️ Write'],['num','1️⃣ Number'],['cut','✂️ Cut strips']]),O('lines','📏','Writing lines',[[1,'1'],[2,'2'],[3,'3']],'ประโยคยาว = เพิ่มบรรทัด'),O('per','📑','Per page',[[4,'4'],[6,'6'],[8,'8']]),TG('th','🇹🇭','Mother-tongue meaning','ภาษาแม่ของนักเรียน')]},
  R6:{d:{per:6,ans:'bank',hint:1,th:0,ch:3,items:8},c:[SENT6,O('ans','✍️','Answer by',[['bank','🎱 Word bank'],['choice','⭕ Choices'],['write','✏️ Write']]),O('ch','🔢','Choices',[[2,'2'],[3,'3']]),O('per','📑','Per page',[[4,'4'],[6,'6'],[8,'8']]),TG('hint','🖼️','Picture hint'),TG('th','🇹🇭','Mother-tongue meaning','ภาษาแม่ของนักเรียน')]},
- R7:{d:{per:1,ans:'write',lines:2,ch:3,story:'show',ul:1,audio:'script',chk:'teacher',noItems:1},c:[TA('sto','📖','Stories','เรื่องละ 1 ย่อหน้า · บรรทัดแรก [pic:kitchen|park|rain] หรือรูปที่อัปโหลดในเกม · เรื่อง 1–3 ประโยค · คำถามขึ้นต้น Q: คำถาม | คำตอบสั้นที่ยอมรับ / อีกแบบ | ประโยคเต็ม · เว้น 1 บรรทัด = เรื่องถัดไป (ใช้ร่วมกับเกม R7)','Q: Who is cooking? | mom | Mom is cooking.',1),O('ans','✍️','Answer by',[['write','✏️ Write'],['choice','⭕ Choices'],['say','🗣️ Say']],'Say = ครู/เพื่อนติ๊กเมื่อพูดตอบถูก'),O('lines','📏','Writing lines',[[1,'1'],[2,'2']],'คำตอบประโยคเต็ม = 2 บรรทัด'),O('ch','🔢','Choices',[[2,'2'],[3,'3']]),O('per','📑','Stories per page',[[1,'1'],[2,'2']]),O('story','📖','Story on paper',[['show','📖 Show'],['listen','👂 Listen only']],'Listen only = ซ่อนเรื่อง ครูอ่านจาก 📜 ใบครู หรือสแกน QR'),TG('ul','🖍️','Underline the answer sentence on the key'),AUD,CHK]},
+ R7:{d:{per:1,ans:'write',lines:2,ch:3,story:'show',ul:1,audio:'script',chk:'teacher',noItems:1},c:[TA('sto','📖','Stories','เรื่องละ 1 ย่อหน้า · บรรทัดแรก [pic:kitchen|park|rain|classroom|market|beach|farm|zoo|bedroom|birthday] หรือรูปที่อัปโหลดในเกม · เรื่อง 1–3 ประโยค · คำถามขึ้นต้น Q: คำถาม | คำตอบสั้นที่ยอมรับ / อีกแบบ | ประโยคเต็ม · เว้น 1 บรรทัด = เรื่องถัดไป (ใช้ร่วมกับเกม R7)','Q: Who is cooking? | mom | Mom is cooking.',1),O('ans','✍️','Answer by',[['write','✏️ Write'],['choice','⭕ Choices'],['say','🗣️ Say']],'Say = ครู/เพื่อนติ๊กเมื่อพูดตอบถูก'),O('lines','📏','Writing lines',[[1,'1'],[2,'2']],'คำตอบประโยคเต็ม = 2 บรรทัด'),O('ch','🔢','Choices',[[2,'2'],[3,'3']]),O('per','📑','Stories per page',[[1,'1'],[2,'2']]),O('story','📖','Story on paper',[['show','📖 Show'],['listen','👂 Listen only']],'Listen only = ซ่อนเรื่อง ครูอ่านจาก 📜 ใบครู หรือสแกน QR'),TG('ul','🖍️','Underline the answer sentence on the key'),AUD,CHK]},
  R8:{d:{per:6,dir:'mid',list:'pic',cs:'up',noItems:1},c:[O('per','🔤','Words per card',[[4,'4'],[6,'6'],[8,'8'],[10,'10']]),O('dir','🧭','Directions',[['easy','→ ↓'],['mid','→ ↓ ↘ ↗'],['hard','+ backwards']]),O('list','📋','Word list',[['pic','🖼️ + word + IPA'],['word','Word + IPA'],['pico','🖼️ only']]),O('cs','🅰️','Letters',[['up','ABC'],['lo','abc']])]},
  W1:{d:{per:8,ans:'boxes',first:1,bank:1,dec:3,pic:'M'},c:[O('ans','✍️','Write in',[['boxes','▢▢▢ Boxes'],['line','___ Line']]),O('per','📑','Per page',[[6,'6'],[8,'8'],[10,'10']]),TG('first','🅰️','Show first letter'),TG('bank','🔤','Letter bank under the word','ตัวอักษรของคำ + ตัวหลอก'),O('dec','🎭','Decoy letters',[[0,'0'],[2,'+2'],[3,'+3'],[4,'+4']])]},
  W2:{d:{lv:'mix',pic:1,per:10},c:[O('lv','📶','Level',[['1','Lv1'],['2','Lv2'],['3','Lv3'],['4','Lv4'],['mix','Mix']]),O('per','📑','Per page',[[6,'6'],[8,'8'],[10,'10'],[12,'12']]),TG('pic','🖼️','Picture clue')]},

@@ -271,6 +271,7 @@ body.dragging .dropzone{display:block}
 .se-pic{border-radius:14px;overflow:hidden;border:1px solid var(--line);aspect-ratio:400/260;background:var(--s2);display:grid;place-items:center}
 .se-pic .big{width:100%;height:100%;object-fit:cover;display:block}
 .se-pic .scn{font-size:72px;font-family:var(--emo)}
+.scn.sv{display:block;line-height:0;overflow:hidden;font-size:0}.scn.sv svg{width:100%;height:100%;display:block}
 .se-pb{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px}
 .se-pb .ib{height:44px;cursor:pointer}
 .se-sc{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:8px 0 4px}
@@ -360,6 +361,7 @@ body.dragging .dropzone{display:block}
 <script src="store.js"></script>
 <script src="emoji.js"></script>
 <script src="cutter.js"></script>
+<script src="scenes.js"></script>
 <script src="stories.js"></script>
 <script>
 (()=>{
@@ -558,7 +560,7 @@ async function aiText(kind,btn){if(!hasKey()){settingsSheet();toast('Add a Gemin
  const old=btn.innerHTML;btn.disabled=true;btn.innerHTML='⏳ Making…';const mt=LG(SET.mt)[2],ln=LG(SET.lang)[2];
  const P={sen:`Write 10 short, easy ${ln} sentences for young learners using these words (one word per sentence, each word used at least once if possible): ${wordList()}.\nFormat EXACTLY one per line: sentence | ${mt} translation\nPut the vocabulary word of each sentence in square brackets, e.g. I like [apples]. | ...\nNo numbering, no extra text.`,
   dlg:`Write 10 short question-and-answer pairs (A asks, B answers) for young ${ln} learners, about: ${SET.name}; use these words: ${wordList()}.\nFormat EXACTLY one per line: Question? | Answer.\nEach answer must clearly fit only its own question. No numbering, no extra text.`,
-  sto:`Write 3 very short picture stories for young ${ln} learners using some of these words: ${wordList()}.\nEach story: 2–3 simple sentences, then 3 questions (who/what/where/yes-no).\nFormat EXACTLY:\n[pic:park]\nStory sentences on one line.\nQ: question? | accepted short answer / another accepted answer | full-sentence model answer.\n(blank line between stories). Use [pic:kitchen], [pic:park] or [pic:rain] to pick the closest scene. No extra text.`};
+  sto:`Write 3 very short picture stories for young ${ln} learners using some of these words: ${wordList()}.\nEach story: 2–3 simple sentences, then 3 questions (who/what/where/yes-no).\nFormat EXACTLY:\n[pic:park]\nStory sentences on one line.\nQ: question? | accepted short answer / another accepted answer | full-sentence model answer.\n(blank line between stories). Pick the closest scene with [pic:NAME], NAME one of: ${(window.SCENE_IDS||["kitchen","park","rain"]).join(", ")}. No extra text.`};
  try{const t=await gemText(P[kind]);const add=t.split('\n').map(l=>l.replace(/^\s*[-*\d.)]+\s+(?=\S)/,(m)=>/^\s*\d+[.)]\s+/.test(m)?'':m)).join('\n').trim();
   SET[kind]=(SET[kind]?SET[kind].replace(/\s+$/,'')+(kind==='sto'?'\n\n':'\n'):'')+add;save(true);renderEd();toast('✨ Added');if(kind==='sen')fetchSenIPA(true)}
  catch(e){toast('⚠️ '+esc(e.message),5000)}finally{btn.disabled=false;btn.innerHTML=old}}

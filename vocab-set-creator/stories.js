@@ -5,7 +5,7 @@
    Needs window.VSE (from index.html): SET, save, sheet, closeSheet, toast, esc, hiWords, LG, LANGS, hasKey, gemJSON, freeTr, speak, settingsSheet, renderTabs, renderSide, renderPane. */
 (()=>{
 const E=()=>window.VSE;
-const SCN={park:['🌳','Park'],kitchen:['🍳','Kitchen'],rain:['🌧️','Rain']};
+const SCN=window.SCENES?Object.fromEntries(Object.entries(window.SCENES).map(([k,v])=>[k,[v.e,v.l]])):{park:['🌳','Park'],kitchen:['🍳','Kitchen'],rain:['🌧️','Rain']};
 const QRE=/^Q\s*\d*\s*[:.]/i;
 let STI=-1,LIBT='all',LIBQ='',BULK=[];
 
@@ -31,7 +31,7 @@ async function cropPic(file){const src=typeof file==='string'?file:await E().fil
  if(w/h>R){const nw=h*R;x=(w-nw)/2;w=nw}else{const nh=w/R;y=(h-nh)/2;h=nh}
  const W=Math.min(1200,Math.round(w)),H=Math.round(W/R),c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,W,H);g.drawImage(im,x,y,w,h,0,0,W,H);return c.toDataURL('image/jpeg',.85)}
 const esc=t=>E().esc(t);
-function picHTML(p,cls){p=p||{};if(p.img)return`<img class="${cls||''}" src="${esc(p.img)}" alt="">`;const s=SCN[p.scn];return`<span class="${cls||''} scn" aria-hidden="true">${s?s[0]:'🖼️'}</span>`}
+function picHTML(p,cls){p=p||{};if(p.img)return`<img class="${cls||''}" src="${esc(p.img)}" alt="">`;const s=SCN[p.scn],sv=window.SCENES&&window.SCENES[p.scn];if(sv)return`<span class="${cls||''} scn sv" aria-hidden="true">${sv.svg}</span>`;return`<span class="${cls||''} scn" aria-hidden="true">${s?s[0]:'🖼️'}</span>`}
 
 /* ---------- list ---------- */
 function used(s){const ws=E().SET.words.map(w=>w.w.toLowerCase()).filter(Boolean);const t=(s.text+' '+(s.qs||[]).map(q=>q.q).join(' ')).toLowerCase();return ws.filter(w=>new RegExp('\\b'+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(s|es)?\\b').test(t))}
@@ -79,7 +79,7 @@ function blank(){return {id:VS.uid(),title:'',pic:{scn:'park'},text:'',qs:[],tr:
 const wl=()=>E().SET.words.map(w=>w.w).join(', ');
 async function aiStories(btn){const v=E();if(!v.hasKey()){v.settingsSheet();v.toast('Add a Gemini key first');return}if(!v.SET.words.length){v.toast('Add some words first');return}
  const old=btn.innerHTML;btn.disabled=true;btn.innerHTML='⏳ Making…';const ln=v.LG(v.SET.lang)[2];
- try{const out=await v.gemJSON(`Write 3 very short picture stories for young ${ln} learners using some of these words: ${wl()}.\nEach story: a short title, the closest scene ("park", "kitchen" or "rain"), 2–3 simple sentences, and 3 questions (who/what/where/yes-no) with short accepted answers and a full-sentence model answer.\nReturn JSON: [{"title":"","scene":"park","text":"","qs":[{"q":"","ok":["",""],"full":""}]}]`);
+ try{const out=await v.gemJSON(`Write 3 very short picture stories for young ${ln} learners using some of these words: ${wl()}.\nEach story: a short title, the closest scene (one of: ${Object.keys(SCN).map(k=>`"${k}"`).join(", ")}), 2–3 simple sentences, and 3 questions (who/what/where/yes-no) with short accepted answers and a full-sentence model answer.\nReturn JSON: [{"title":"","scene":"park","text":"","qs":[{"q":"","ok":["",""],"full":""}]}]`);
   const L=(Array.isArray(out)?out:out.stories||[]).map(o=>({id:VS.uid(),title:String(o.title||''),pic:{scn:SCN[o.scene]?o.scene:'park'},text:String(o.text||''),qs:(o.qs||[]).map(q=>({q:String(q.q||''),ok:(q.ok||[]).map(String),full:String(q.full||'')})),tr:{}}));
   v.SET.stories.push(...L);sync();refresh();v.toast(`✨ ${L.length} stories added`)}catch(e){v.toast('⚠️ '+esc(e.message),5000)}finally{btn.disabled=false;btn.innerHTML=old}}
 async function aiQs(btn){const v=E(),s=cur();if(!v.hasKey()){v.settingsSheet();v.toast('Add a Gemini key first');return}if(!(s.text||'').trim()){v.toast('Write the story first');return}
@@ -101,7 +101,7 @@ async function lib(){const v=E();if(!VS.cloud.on()){v.toast('☁️ Sign in to u
  libLoad()}
 let libT=null;
 async function libLoad(){const g=document.getElementById('libg');if(!g)return;try{const j=await VS.cloud.pics(LIBQ,LIBT==='mine',LIBT==='scene'?'scene':'');const S=E().SET;
- g.innerHTML=(j.pics||[]).map(p=>{const nm=p.name||{};const a=nm[S.lang]||nm.en||Object.values(nm)[0]||'',b=nm[S.mt]&&nm[S.mt]!==a?nm[S.mt]:'';return`<button class="libp" data-a="st-libpick" data-url="${esc(p.url)}"><img src="${esc(p.url)}" alt="${esc(a)}" loading="lazy"><span><b>${esc(a||'—')}</b>${b?' · '+esc(b):''}<small>${p.mine?'👤 you':'👩‍🏫 '+esc(p.by||'')}</small></span></button>`}).join('')||'<p class="hint">No pictures found.</p>'}
+ g.innerHTML=(LIBT==='scene'&&window.SCENES?Object.entries(window.SCENES).filter(([k,v])=>!LIBQ||(k+' '+v.l+' '+v.alt).toLowerCase().includes(LIBQ.toLowerCase())).map(([k,v])=>`<button class="libp" data-a="st-scn" data-v="${k}"><span class="scn sv" style="aspect-ratio:400/260">${v.svg}</span><span><b>${v.e} ${esc(v.l)}</b><small>✏️ drawn scene</small></span></button>`).join(''):'')+(j.pics||[]).map(p=>{const nm=p.name||{};const a=nm[S.lang]||nm.en||Object.values(nm)[0]||'',b=nm[S.mt]&&nm[S.mt]!==a?nm[S.mt]:'';return`<button class="libp" data-a="st-libpick" data-url="${esc(p.url)}"><img src="${esc(p.url)}" alt="${esc(a)}" loading="lazy"><span><b>${esc(a||'—')}</b>${b?' · '+esc(b):''}<small>${p.mine?'👤 you':'👩‍🏫 '+esc(p.by||'')}</small></span></button>`}).join('')||'<p class="hint">No pictures found.</p>'}
  catch(e){g.innerHTML=`<p class="hint">⚠️ ${esc(e.message)}</p>`}}
 
 /* ---------- add many pictures ---------- */
