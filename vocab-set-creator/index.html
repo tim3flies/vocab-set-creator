@@ -379,7 +379,7 @@ const SKC={L:'#c2410c',S:'#7c3aed',R:'#1d4ed8',W:'#be123c',X:'#6d28d9'};
 
 /* ---------- settings (this device) ---------- */
 const CFG_K='bokogo.vset.cfg';
-let CFG={key:'',tm:'gemini-2.5-flash',im:'gemini-2.5-flash-image',sty:'cute',lang:'en',mt:'th'};
+let CFG={key:'',tm:'gemini-3.5-flash',im:'gemini-3.1-flash-image',sty:'cute',lang:'en',mt:'th'};
 try{Object.assign(CFG,JSON.parse(localStorage.getItem(CFG_K)||'{}'))}catch(e){}
 const saveCfg=()=>{try{localStorage.setItem(CFG_K,JSON.stringify(CFG))}catch(e){}};
 const STY=[['cute','🧸 Cute','cute kawaii cartoon sticker, thick clean outline, soft colours'],['flat','🔷 Flat icon','simple flat vector icon, bold shapes, few colours'],['real','📷 Real','realistic photo of a single object, studio light'],['water','🎨 Watercolor','soft watercolor children\'s book illustration'],['clay','🧱 Clay 3D','cute 3D clay render, soft light'],['line','✏️ Line art','black line drawing for colouring, no fill']];
@@ -415,7 +415,16 @@ async function freeTr(t,from,to){try{const r=await fetch('https://api.mymemory.t
 
 /* ---------- Gemini (key stays on this device; called straight from the browser) ---------- */
 const hasKey=()=>!!(CFG.key||'').trim();
-async function gem(model,body){const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':CFG.key.trim()},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j?.error?.message||('HTTP '+r.status));return j}
+/* Google retires models often ("no longer available to new users") or they get busy (503) → try the next one, remember the one that works */
+const GEM_TXT=['gemini-3.5-flash','gemini-3-flash-preview','gemini-flash-latest','gemini-3.8-flash','gemini-flash-lite-latest'],GEM_IMG=['gemini-3.1-flash-image','gemini-3.1-flash-image-preview','gemini-3-pro-image','gemini-2.5-flash-image'];
+async function gem(model,body){const img=model===CFG.im,list=[...new Set([model,...(img?GEM_IMG:GEM_TXT)])];let last,gone=false;
+ for(const m of list){const ac=new AbortController(),tid=setTimeout(()=>ac.abort(),50000);let r,j;try{r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`,{method:'POST',signal:ac.signal,headers:{'Content-Type':'application/json','x-goog-api-key':CFG.key.trim()},body:JSON.stringify(body)});j=await r.json().catch(()=>({}))}catch(e){clearTimeout(tid);last=new Error(e.name==='AbortError'?m+' took too long':e.message);continue}clearTimeout(tid);
+  if(r.ok){if(m!==model&&gone){CFG[img?'im':'tm']=m;saveCfg()}return j}
+  const msg=j?.error?.message||('HTTP '+r.status);last=new Error(msg);
+  if(r.status===404||/no longer available|not found|not supported/i.test(msg)){if(m===model)gone=true;continue}
+  if(r.status===503||r.status===429||r.status===500||/high demand|overloaded|quota/i.test(msg))continue;
+  throw last}
+ throw last}
 async function gemJSON(prompt){const j=await gem(CFG.tm,{contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:'application/json',temperature:.4}});const t=(j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('');return JSON.parse(t.replace(/^```json|```$/g,''))}
 async function gemText(prompt){const j=await gem(CFG.tm,{contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.7}});return (j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').replace(/^```\w*\n?|```$/g,'').trim()}
 async function gemImage(word,sty){const st=(STY.find(s=>s[0]===sty)||STY[0])[2];const j=await gem(CFG.im,{contents:[{parts:[{text:`Draw ONE picture of "${word}" for a children's English vocabulary card. Style: ${st}. Plain white background, the object centred and filling most of the square, no text, no letters, no words, no border.`}]}],generationConfig:{responseModalities:['IMAGE','TEXT']}});const p=(j.candidates?.[0]?.content?.parts||[]).find(p=>p.inlineData||p.inline_data);if(!p)throw new Error('No picture came back');const d=p.inlineData||p.inline_data;return shrink(`data:${d.mimeType||d.mime_type||'image/png'};base64,${d.data}`)}
