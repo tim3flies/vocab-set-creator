@@ -61,6 +61,10 @@ input,select,textarea{font-size:16px}
 .strip span img{width:100%;height:100%;object-fit:contain}
 .vca{display:flex;gap:8px}
 .vca .ib{flex:1}
+.cbtn{position:relative}.cdot{position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:transparent}
+.cdot.on{background:#2e9d5b}.cdot.busy{background:#e8a23a}.cdot.err,.cdot.offline{background:#d9534f}
+.cl-st{display:flex;align-items:center;gap:10px;padding:12px;border-radius:14px;background:var(--soft,#f4f1ea);margin-bottom:12px}.cl-st b{display:block}
+.cl-tabs{display:flex;gap:8px;margin-bottom:12px}.cl-tabs .ib{flex:1}.cl-tabs .ib.on{background:var(--ink,#222);color:#fff;border-color:transparent}
 .empty{background:var(--paper);border:2px dashed var(--line);border-radius:18px;padding:28px 18px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px}
 .empty .big{font-size:56px;font-family:var(--emo);line-height:1}
 .empty p{margin:0;color:var(--muted);max-width:420px}
@@ -252,6 +256,7 @@ body.dragging .dropzone{display:block}
   <span class="sp"></span>
   <button class="ib" data-a="import" title="Import a set or an old Bingo backup"><span class="emo">⬆️</span><span class="lb hs">Import</span></button>
   <a class="ib" href="worksheets.html" title="Worksheets" style="text-decoration:none;color:inherit"><span class="emo">🖨️</span><span class="lb hs">Worksheets</span></a>
+  <button class="ib cbtn" data-a="cloud" id="cloudB" title="Save online"><span class="emo">☁️</span><span class="lb hs" id="cloudL">Sign in</span><i class="cdot" id="cloudD"></i></button>
   <button class="ib" data-a="settings" title="Settings"><span class="emo">⚙️</span></button>
  </header>
  <main class="libw">
@@ -264,7 +269,7 @@ body.dragging .dropzone{display:block}
 <!-- ============ EDITOR ============ -->
 <div id="vEd" hidden>
  <header class="top">
-  <button class="ib" data-a="home" title="All sets">‹ <span class="emo">📚</span></button>
+  <button class="ib cbtn" data-a="home" title="All sets">‹ <span class="emo">📚</span><i class="cdot" id="cloudD2"></i></button>
   <button class="ib" data-a="icon" title="Set picture" id="edIcon"><span class="bigemo">📚</span></button>
   <input class="nm" id="edName" aria-label="Set name" placeholder="Set name">
   <a class="ib pri" id="edPrint" href="worksheets.html" title="Make worksheets"><span class="emo">🖨️</span><span class="lb hs">Worksheets</span></a>
@@ -316,7 +321,7 @@ const STY=[['cute','🧸 Cute','cute kawaii cartoon sticker, thick clean outline
 
 /* ---------- state ---------- */
 let SETS=[],SET=null,TAB='w',saveT=null,PICK=-1;
-const save=(now)=>{if(!SET)return;clearTimeout(saveT);const go=()=>VS.put(SET).catch(e=>toast('⚠️ Save failed: '+esc(e.message)));if(now)return go();saveT=setTimeout(go,400)};
+const save=(now)=>{if(!SET)return;clearTimeout(saveT);const go=()=>{saveT=null;return VS.put(SET).catch(e=>toast('⚠️ Save failed: '+esc(e.message)))};if(now)return go();saveT=setTimeout(go,400)};
 
 /* ---------- images ---------- */
 function fileToData(f){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(f)})}
@@ -501,7 +506,7 @@ const u8url=(u,p)=>{let s='';for(let i=0;i<u.length;i+=8192)s+=String.fromCharCo
 async function fromBingo(d,files){const ol=d.ol||'en',learn=CFG.lang||'en',mt=CFG.mt||'th';const s=VS.blank(d.name||'Bingo');s.lang=learn;s.mt=mt;s.from='bingo:'+d.id;
  for(const it of d.items||[]){const o=it.o??it.w??'';const t=it.t||{};const w=ol===learn?o:(t[learn]||o);const m=ol===mt?o:(t[mt]||'');let img=it.el;
   if(img&&typeof img==='string'&&!img.startsWith('data:')){img=files&&files[img]?u8url(files[img],img):''}
-  if(img&&img.startsWith('data:'))img=await shrink(img);else img='';
+  if(img&&img.startsWith('data:'))img=await shrink(img);else if(!/^https:\/\//.test(img||''))img='';
   if(w)s.words.push({id:VS.uid(),w:String(w).trim(),ipa:'',m:m,e:it.e||(img?'':emoFor(w)),img})}
  s.icon=(s.words.find(w=>w.e)||{}).e||'🎲';return s}
 async function importFiles(fl){let added=0;
@@ -527,6 +532,31 @@ function sample(){const s=VS.blank('Fruits');s.icon='🍎';
  s.ipa={i:'aɪ',like:'laɪk',apples:'ˈæp.əlz',she:'ʃiː',eats:'iːts',a:'ə',the:'ðə',is:'ɪz',sweet:'swiːt',we:'wiː',buy:'baɪ',grapes:'ɡreɪps',at:'æt',market:'ˈmɑː.kɪt',do:'duː',you:'juː',want:'wɒnt',an:'ən',sour:'ˈsaʊ.ər',big:'bɪɡ',and:'ænd',green:'ɡriːn',drink:'drɪŋk',water:'ˈwɔː.tər'};return s}
 
 /* ---------- events ---------- */
+/* ☁️ Cloud: sign in + live status (sync itself lives in store.js) */
+function cloudUI(d){const c=VS.cloud,st=d?d.state:(c.on()?'on':'off');['cloudD','cloudD2'].forEach(i=>{const x=$(i);if(x)x.className='cdot '+(c.on()?st:'')});
+ const l=$('cloudL');if(l)l.textContent=c.on()?(c.st.name||'Online'):'Sign in';const b=$('cloudB');if(b)b.title=c.on()?'Saved online as '+(c.st.name||''):'Save online'}
+function cloudSheet(m){const c=VS.cloud;
+ if(c.on()){const st=c.state,lab={on:'✅ Saved online',busy:'🔄 Saving…',err:'⚠️ Could not reach the server',offline:'📴 Offline. Will save when back online'}[st]||'✅ Saved online';
+  sheet('☁️ Online saving',`<div class="cl-st"><span style="font-size:28px">👤</span><div style="flex:1;min-width:0"><b>${esc(c.st.name||'')}</b><span class="muted">${lab}</span></div></div>
+  <p class="hint">Your sets and pictures are saved at <b>english.learn8.co</b>. Sign in with the same name on any phone, tablet or computer to see them.</p>
+  <div class="rowb"><button class="ib pri" data-a="cl-sync">🔄 Sync now</button><button class="ib" data-a="cl-out">🚪 Sign out</button></div>`);return}
+ const nw=m==='new';
+ sheet('☁️ Save online',`<div class="cl-tabs"><button class="ib ${nw?'':'on'}" data-a="cl-in">🔑 Sign in</button><button class="ib ${nw?'on':''}" data-a="cl-new">✨ New account</button></div>
+ <form id="clf" autocomplete="on" onsubmit="return false">
+ <div class="fld"><label>👤 Name</label><input id="cln" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="e.g. teacher.nana"></div>
+ <div class="fld"><label>🔒 Password</label><input id="clp" type="password" autocomplete="${nw?'new-password':'current-password'}" placeholder="${nw?'At least 8 characters':''}"></div>
+ ${nw?'<div class="fld"><label>🎟️ Invite code</label><input id="cli" autocapitalize="none" spellcheck="false" autocomplete="off"></div>':''}
+ <div class="rowb"><button class="ib pri" type="submit" data-a="cl-go" data-m="${nw?'new':'in'}">${nw?'✨ Create account':'🔑 Sign in'}</button></div></form>
+ <p class="hint">Sets on this device are uploaded after you sign in, then kept in sync. Without signing in, sets stay only in this browser.</p>`);setTimeout(()=>{const x=$('cln');if(x)x.focus()},50)}
+async function cloudGo(m){const n=($('cln').value||'').trim(),p=$('clp').value||'';if(!n||!p){toast('Type your name and password');return}
+ const b=document.querySelector('[data-a="cl-go"]');if(b){b.disabled=true;b.textContent='⏳ …'}
+ try{if(m==='new')await VS.cloud.register(n,p,($('cli').value||'').trim());else await VS.cloud.signin(n,p);closeSheet();toast('☁️ Signed in as '+esc(VS.cloud.st.name)+'. Sets are saved online.')}
+ catch(er){toast('⚠️ '+esc(er.message));if(b){b.disabled=false;b.textContent=m==='new'?'✨ Create account':'🔑 Sign in'}}}
+addEventListener('vs-cloud',async e=>{const d=e.detail||{};cloudUI(d);
+ if(d.signedOut)toast('☁️ Please sign in again');
+ if(d.pushed&&SET&&SET.id===d.pushed.id){const m=new Map((d.pushed.words||[]).map(w=>[w.id,w.img]));for(const w of SET.words){const u=m.get(w.id);if(u&&/^data:/.test(w.img||'')&&/^https:/.test(u))w.img=u}}
+ if(d.changed){if(!$('vLib').hidden){SETS=await VS.all();renderLib()}
+  else if(SET&&d.changed.includes(SET.id)&&!saveT){const s=await VS.get(SET.id);if(s){SET=s;['words','sen','dlg','sto'].forEach(k=>{if(SET[k]==null)SET[k]=k==='words'?[]:''});SET.ipa=SET.ipa||{};renderEd()}else showLib()}}});
 document.addEventListener('click',async e=>{const t=e.target;
  const op=t.closest('[data-open]');if(op&&!t.closest('a')){openSet(op.dataset.open);return}
  const cur=t.closest('[data-cur]');if(cur){VS.cur.set(cur.dataset.cur);return}
@@ -544,6 +574,11 @@ document.addEventListener('click',async e=>{const t=e.target;
   case 'mk':{const s=VS.blank(($('nn').value||'').trim()||'New set');s.lang=CFG.lang;s.mt=CFG.mt;await VS.put(s);closeSheet();await openSet(s.id);TAB='w';renderEd();const m=b.dataset.m;
    if(m==='paste')pasteSheet();else if(m==='ai')aiWordsSheet();else if(m==='pics')$('fImgs').click();else if(m==='cut')CUT.pick();else setTimeout(()=>$('addw').focus(),100);break}
   case 'settings':settingsSheet();break;
+  case 'cloud':cloudSheet();break;
+  case 'cl-in':case 'cl-new':cloudSheet(a==='cl-new'?'new':'in');break;
+  case 'cl-go':cloudGo(b.dataset.m);break;
+  case 'cl-sync':VS.cloud.sync().then(()=>{toast('☁️ Synced');cloudSheet()},er=>toast('⚠️ '+esc(er.message)));break;
+  case 'cl-out':if(confirm('Sign out? Sets stay on this device too.')){await VS.cloud.signout();closeSheet();toast('Signed out')}break;
   case 'savecfg':CFG.key=$('sk').value.trim();CFG.tm=$('stm').value.trim()||CFG.tm;CFG.im=$('sim').value.trim()||CFG.im;CFG.lang=$('sl').value;CFG.mt=$('smt').value;saveCfg();toast('💾 Saved');closeSheet();if(SET)renderPane();break;
   case 'testkey':{CFG.key=$('sk').value.trim();CFG.tm=$('stm').value.trim()||CFG.tm;saveCfg();b.disabled=true;b.textContent='⏳';try{const r=await gemText('Reply with the single word: OK');toast('✅ Key works · '+esc(r.slice(0,20)))}catch(er){toast('⚠️ '+esc(er.message),5000)}b.disabled=false;b.textContent='🧪 Test key';break}
   case 'import':$('fImp').click();break;
@@ -601,6 +636,7 @@ document.addEventListener('drop',async e=>{dragN=0;document.body.classList.remov
 document.addEventListener('paste',async e=>{if(PICK<0)return;const f=[...(e.clipboardData?.files||[])].find(f=>/^image\//.test(f.type));if(f){e.preventDefault();setPic({img:await shrink(await fileToData(f))})}});
 
 /* ---------- start ---------- */
+cloudUI();
 (async()=>{const q=new URLSearchParams(location.search);try{if(q.get('set'))await openSet(q.get('set'));else await showLib();if(q.get('new'))newSheet()}catch(e){document.body.insertAdjacentHTML('afterbegin',`<p style="padding:16px;color:#b00">⚠️ This browser blocked local storage (${esc(e.message)}). Try a normal (not private) window.</p>`)}})();
 window.addEventListener('pagehide',()=>{if(SET)save(true)});
 })();

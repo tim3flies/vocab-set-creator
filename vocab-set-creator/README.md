@@ -39,5 +39,13 @@ Make vocabulary sets and print them as worksheets. Static site (no server, no bu
 ## Layout (small-first)
 iPhone mini 375: stacked word rows, bottom add bar, ⋮ sheet for print types/languages/export. iPad mini 744: one-line rows (picture · word · IPA · meaning). ≥1024 (iPad landscape / desktop): left panel with “Print as…” type grid, languages and export.
 
+## ☁️ Online saving (english.learn8.co)
+Live at **https://english.learn8.co/vocab/** (own site on the DigitalOcean droplet; learn8.co is not touched). The GitHub Pages copy can sign in to the same server.
+- Tap **☁️ Sign in** (top bar). New account needs the invite code (kept in `/srv/english/data/config.php`). After sign-in every set on the device is uploaded, then kept in sync (on save after 1.5 s, on focus, every 60 s, when back online). Last change wins (`updated`). Deleting a set deletes it on all devices. Green dot = saved, orange = saving, red = offline/error.
+- Pictures (`data:` images) are saved as files on the server (`/media/<user>/<sha1>.png|jpg|webp`) and the set keeps their URL, so sets stay small.
+- Sync lives in `store.js` (`VS.cloud`): both the creator and the worksheet page use it.
+- `server/`: `api.php` (PHP 8.3 + SQLite, actions register/login/me/logout/list/put/del, Bearer token), `nginx.conf` + `nginx-body.inc`, `php-pool.conf` (own pool in php8.3-fpm-sp), `setup.sh` (one time), `certbot.sh` (Let's Encrypt), `deploy.sh` (update the site from this repo: `bash /srv/english/deploy.sh`).
+- Server files: `/srv/english/{public,data,logs}`, `/etc/nginx-sp/vhosts.d/english.conf`, `/etc/nginx-sp/english-body.inc`, `/etc/php8.3-sp/fpm-pools.d/english.conf`.
+
 ## Not yet
-Sets live on one device (no account/cloud sync) · story pictures use the 3 built-in scenes · production should use the Breakie dictionary for IPA/meaning instead of the free APIs.
+story pictures use the 3 built-in scenes · production should use the Breakie dictionary for IPA/meaning instead of the free APIs.
