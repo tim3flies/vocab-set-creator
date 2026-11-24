@@ -138,7 +138,7 @@ svg.trw{overflow:visible}:has(>svg.trw){overflow:hidden}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 
 /* ===== worksheet paper (always white, print colours) ===== */
-.sheet{background:#fff;color:#111;font-family:var(--kid);position:relative;overflow:hidden;transform-origin:0 0;--pic:15mm;--pz:1;--tz:1;--fs:calc(13pt*var(--tz))}
+.sheet{background:#fff;color:#111;font-family:var(--kid);position:relative;overflow:hidden;transform-origin:0 0;--pic:15mm;--pz:1;--tz:1;--iz:1;--fs:calc(13pt*var(--tz))}
 .sheet .in{position:absolute;inset:0;padding:10mm 11mm 9mm;display:flex;flex-direction:column;gap:3.5mm}
 .hd{display:flex;flex-direction:column;gap:2.5mm;flex:none}
 .hd1{display:flex;align-items:center;gap:3mm}
@@ -173,7 +173,7 @@ svg.trw{overflow:visible}:has(>svg.trw){overflow:hidden}
 .ok{outline:.8mm solid #e11d48;outline-offset:.5mm;border-radius:3mm}
 .op.ok i{background:#e11d48;color:#fff;border-color:#e11d48}
 .wd{font-size:var(--fs);font-weight:700}
-.ipa{font:400 9.5pt var(--ui);color:#555}
+.ipa{font:400 calc(9.5pt*var(--iz,1)) var(--ui);color:#555}
 .line{flex:1;border-bottom:.35mm solid #555;height:8mm;min-width:20mm}
 .hw{flex:1;min-width:0;background:linear-gradient(#999,#999) 0 0/100% .25mm no-repeat,repeating-linear-gradient(90deg,#aaa 0 1.5mm,transparent 1.5mm 3mm) 0 40%/100% .25mm no-repeat,linear-gradient(#d33,#d33) 0 75%/100% .35mm no-repeat,linear-gradient(#bbb,#bbb) 0 100%/100% .25mm no-repeat}
 .hw1{background:linear-gradient(#555,#555) 0 100%/100% .35mm no-repeat}
@@ -424,7 +424,7 @@ const SPEC={
 };
 const PICT=['L1','L2','S1','R1','R2','R3','R6','R7','W1','W2','W4','W5','X'];
 const setSize=(c,s)=>(applyData(),{R7:r7Parse(S.sto).length,R6:SEN.length,L2:s.grid,L3:SEN.length,S2:DLG.length,R4:DLG.length,S3:SEN.length,R5:SEN.length,W3:SEN.length,W5:s.what==='letter'?LET.length:s.what==='sent'?SEN.length:W.length}[c]||W.length);
-const COMMON={paper:'A4',orient:'p',pz:100,tz:100,font:'andika',items:10,head:1,key:1,bw:0,ab:0};
+const COMMON={paper:'A4',orient:'p',pz:100,tz:100,iz:100,font:'andika',items:10,head:1,key:1,bw:0,ab:0};
 const S={t:'L1',set:{},dev:'auto',open:false,po:{}};
 // Custom (X): each ticked part keeps its own type settings (Nana 23 Nov). Keys X controls for all parts are left out.
 const XCAP={R7:1,R2:6,R4:5,R5:6,S3:5,L3:5,W3:6,R6:6,W5:4,S2:6,R3:8,S1:10};
@@ -476,7 +476,7 @@ R.S1=(s,n,r)=>{const ws=Array.from({length:n},(_,i)=>W[i%W.length]);
   const lab=w=>s.label==='none'?'':`<span class="wd">${w[0]}</span>${s.label==='ipa'?`<span class="ipa">/${w[2]}/</span>`:''}`;
   const pages=chunk(ws,s.per).map(c=>a=>`<div class="cutg" style="grid-template-columns:repeat(${cols},1fr);grid-template-rows:repeat(${rows},1fr)">${Array.from({length:s.per},(_,i)=>c[i]?`<div class="card"><span class="sc">✂</span><span class="pic" style="font-size:calc(var(--pic)*1.6)">${c[i][1]}</span>${a?`<span class="wd ans">${c[i][0]}</span><span class="ipa ans">/${c[i][2]}/</span>`:lab(c[i])}</div>`:'<div class="card"></div>').join('')}</div>`);
   const backs=s.back?chunk(ws,s.per).map(c=>{const cells=Array.from({length:s.per},(_,i)=>c[i]);const mir=[];for(let y=0;y<rows;y++)for(let x=cols-1;x>=0;x--)mir.push(cells[y*cols+x]);
-   return `<div class="cutg" style="grid-template-columns:repeat(${cols},1fr);grid-template-rows:repeat(${rows},1fr)">${mir.map(w=>w?`<div class="card"><span class="wd" style="font-size:calc(20pt*var(--tz))">${w[0]}</span><span class="ipa" style="font-size:calc(12pt*var(--tz))">/${w[2]}/</span><span style="font-size:calc(13pt*var(--tz))">🗣️</span></div>`:'<div class="card"></div>').join('')}</div>`}):[];
+   return `<div class="cutg" style="grid-template-columns:repeat(${cols},1fr);grid-template-rows:repeat(${rows},1fr)">${mir.map(w=>w?`<div class="card"><span class="wd" style="font-size:calc(20pt*var(--tz))">${w[0]}</span><span class="ipa" style="font-size:calc(12pt*var(--tz)*var(--iz,1))">/${w[2]}/</span><span style="font-size:calc(13pt*var(--tz))">🗣️</span></div>`:'<div class="card"></div>').join('')}</div>`}):[];
   return {pagesRaw:pages,key:ws.map(w=>`${w[1]} ${w[0]} /${w[2]}/`),extra:backs.map(b=>['🔁 Card backs (print on the back, flip on long edge)',b])}}
  const lbl={teacher:'👩‍🏫',partner:'👫',self:'🙋'}[s.chk];
  const it=ws.map((w,i)=>a=>`<div class="it"><b class="no">${i+1}</b>${P(w[1])}${s.label!=='none'||a?`<span style="display:flex;flex-direction:column"><span class="wd">${w[0]}</span>${s.label==='ipa'||a?`<span class="ipa">/${w[2]}/</span>`:''}</span>`:''}<span style="margin-left:auto;display:flex;gap:4mm;align-items:center"><span class="tick">🗣️1 <i></i></span><span class="tick">2 <i></i></span><span class="tick">3 <i></i></span><span class="tick">${lbl} ✓<i></i></span></span></div>`);
@@ -489,7 +489,7 @@ R.S2=(s,n,r)=>{const ds=Array.from({length:n},(_,i)=>DLG[i%DLG.length]);const op
  const it=ds.map((d,i)=>a=>`<div class="it" style="${one?'flex-direction:row;align-items:center;flex-wrap:wrap;gap:1mm 3mm;padding-top:1mm;padding-bottom:1mm':'flex-direction:column;align-items:stretch;justify-content:center;gap:1.5mm'}"><div style="display:flex;gap:3mm;align-items:center"><b class="no">${i+1}</b><span style="font-size:calc(15pt*var(--tz))">🧑</span><span class="bub">${d[0]}</span></div><div style="display:flex;gap:3mm;margin-left:${one?'2mm':'10mm'};flex-wrap:wrap;align-items:center;flex:1"><span style="font-size:calc(15pt*var(--tz))">🧒</span>${op[i].map((o,j)=>`<span class="${a&&o===d[1]?'ok':''}" style="font-size:calc(12pt*var(--tz));padding:0 1mm">${AL[j]}) ${o}</span>`).join('')}<span class="tick" style="margin-left:auto">🗣️ ✓<i></i></span></div></div>`);
  return {it,key:ds.map((d,i)=>`${AL[op[i].indexOf(d[1])]}) ${d[1]}`),per:s.per,cols:1}};
 R.S3=(s,n)=>{const fs='calc(18pt*var(--tz))';const ss=Array.from({length:n},(_,i)=>SEN[i%SEN.length]);const lbl={teacher:'👩‍🏫',partner:'👫',self:'🙋'}[s.chk];
- const it=ss.map((x,i)=>a=>`<div class="it" style="align-items:center"><b class="no">${i+1}</b><div style="flex:1;display:flex;flex-direction:column;gap:1.5mm;min-width:0"><div style="display:flex;flex-wrap:wrap;gap:2mm 5mm;font-size:${fs};font-weight:700">${(()=>{const ip=x[1].split(' ');return x[0].split(' ').map((w,k)=>`<span style="display:inline-flex;flex-direction:column;align-items:center;gap:.8mm">${w}${s.ipa?`<span class="ipa" style="font-size:calc(10.5pt*var(--tz));font-weight:400;line-height:1.1">${ip[k]?'/'+ip[k]+'/':'&nbsp;'}</span>`:''}${s.tick?'<i style="width:5mm;height:5mm;border:.35mm solid #777;border-radius:1mm"></i>':''}</span>`).join('')})()}</div></div><div style="display:flex;flex-direction:column;align-items:center;gap:1mm;flex:none"><span class="star">☆☆☆</span><span class="tick">${lbl}</span></div></div>`);
+ const it=ss.map((x,i)=>a=>`<div class="it" style="align-items:center"><b class="no">${i+1}</b><div style="flex:1;display:flex;flex-direction:column;gap:1.5mm;min-width:0"><div style="display:flex;flex-wrap:wrap;gap:2mm 5mm;font-size:${fs};font-weight:700">${(()=>{const ip=x[1].split(' ');return x[0].split(' ').map((w,k)=>`<span style="display:inline-flex;flex-direction:column;align-items:center;gap:.8mm">${w}${s.ipa?`<span class="ipa" style="font-size:calc(10.5pt*var(--tz)*var(--iz,1));font-weight:400;line-height:1.1">${ip[k]?'/'+ip[k]+'/':'&nbsp;'}</span>`:''}${s.tick?'<i style="width:5mm;height:5mm;border:.35mm solid #777;border-radius:1mm"></i>':''}</span>`).join('')})()}</div></div><div style="display:flex;flex-direction:column;align-items:center;gap:1mm;flex:none"><span class="star">☆☆☆</span><span class="tick">${lbl}</span></div></div>`);
  return {it,noKey:1,key:ss.map(x=>`${x[0]} <span class="ipa">/${x[1]}/</span>`),per:s.per,cols:1}};
 R.R1=(s,n,r)=>{const it=[],key=[];for(let i=0;i<n;i++){const t=WI(i,3,1),op=pickOpts(t,W,s.ch,r);
  it.push(a=>`<div class="it" style="flex-direction:column;justify-content:center;gap:2mm"><b class="no" style="position:absolute;left:2mm;top:2mm">${i+1}</b>${P(t[1])}<div style="display:flex;gap:2.5mm;flex-wrap:wrap;justify-content:center">${op.map(w=>`<span class="wd ${a&&w===t?'ok':''}" style="font-size:calc(12.5pt*var(--tz));padding:0 1mm">${w[0]}</span>`).join('<span style="color:#bbb">·</span>')}</div></div>`);key.push(`${t[1]} ${t[0]}`)}
@@ -588,8 +588,8 @@ function head(code,s,ver,first,key){const t=TM[code];const c=COL(t[2]);const sta
  const how=t[3].map(([e,w])=>`<b>${e}</b><span>${w}</span>`).join('<span class="ar">→</span>');
  if(!first)return `<div class="mini"><span class="cd" style="background:${c}">${code}</span>${t[1]}${ver?` · Version ${ver}`:''}${key?`<span style="margin-left:auto">${stamp}</span>`:'<span style="margin-left:auto">Name ______________</span>'}</div>`;
  return `<div class="hd"><div class="hd1"><span class="cd" style="background:${c}">${code}</span><h3>${t[1]}${ver?` <small style="font:700 calc(11pt*var(--tz)) var(--ui);color:#666">· ${ver}</small>`:''}</h3>${key?stamp:`<span class="brand"><i>b</i>Bokogo · ${escH(window.VTOPIC||'🍎 Fruits')}</span>`}</div>${s.head?`<div class="nm"><span>Name</span><span style="flex:.45">Class</span><span style="flex:.5">Date</span><span class="sc"><em>${key?`<b style="color:#e11d48;margin-right:auto">${s._n}</b>`:''}/ ${s._n}</em></span></div>`:''}<div class="ins" style="background:var(--${t[2]}b)">${how}<span class="tx">${t[4]}</span></div></div>`}
-function sheetHTML(s,inner,foot,key){const [w,h]=dims(s);const pz=(s.pz||100)/100,tz=(s.tz||100)/100,pic=(15*pz).toFixed(2)+'mm';const kf=(TFONT[s.font]||TFONT.andika)[0].replace(/"/g,"'");
- return {w,h,html:`<div class="sheet ${s.bw?'bw':''} ${key?'key':''}" style="width:${w}mm;height:${h}mm;--pic:${pic};--pz:${pz};--tz:${tz};--kid:${kf},'Sarabun',sans-serif"><div class="in">${inner}<div class="ft"><span>bokogo · Games › Create &amp; print</span><span>${foot}</span></div></div></div>`}}
+function sheetHTML(s,inner,foot,key){const [w,h]=dims(s);const pz=(s.pz||100)/100,tz=(s.tz||100)/100,iz=(s.iz||100)/100,pic=(15*pz).toFixed(2)+'mm';const kf=(TFONT[s.font]||TFONT.andika)[0].replace(/"/g,"'");
+ return {w,h,html:`<div class="sheet ${s.bw?'bw':''} ${key?'key':''}" style="width:${w}mm;height:${h}mm;--pic:${pic};--pz:${pz};--tz:${tz};--iz:${iz};--kid:${kf},'Sarabun',sans-serif"><div class="in">${inner}<div class="ft"><span>bokogo · Games › Create &amp; print</span><span>${foot}</span></div></div></div>`}}
 function itemsGrid(list,a,cols,per){const rows=Math.ceil(per/cols);return `<div class="items" style="grid-template-columns:repeat(${cols},minmax(0,1fr));grid-template-rows:repeat(${rows},minmax(0,1fr))">${list.map(f=>f(a)).join('')}</div>`}
 const pg=(p,a)=>typeof p==='function'?p(a):p;
 function bodies(out,s,a=false){ // page bodies (without header); a = answer key (filled-in sheet)
@@ -643,7 +643,7 @@ function settings(pages){const s=st(),t=TM[S.t],sp=SPEC[S.t];
  $('set').innerHTML=`<div class="sh"><b>⚙️ ${S.t} settings</b><button class="x" data-a="sheet" aria-label="Close">✕</button></div><div class="sb">
  <div class="note" style="background:var(--${t[2]}b)"><b>📄 On paper</b>${t[5]}</div>
  <div class="sec">${t[0]} · ${t[1]}</div>${S.t!=='X'&&!['R3','W4','L2'].includes(S.t)?`<div class="note" style="background:var(--s2);font-size:12.5px">📚 ใช้ทุกคำในชุด (${setSize(S.t,s)}) · เลือกจำนวนข้อต่อหน้า ระบบแบ่งหน้าให้เอง</div>`:''}${sp.c.map(c=>ctl(c,s)).join('')}${S.t==='X'?partSets(s):''}
- <div class="sec">Size</div>${S.t!=='W5'?ctl(FONTC,s):''}${PICT.includes(S.t)?ctl(SL('pz','🖼️','Picture size',50,200,10,'ลากเพื่อปรับ'),s):''}${ctl(SL('tz','🔠','Text size',70,160,5,S.t==='W5'?'= ความสูงบรรทัด':'ลากเพื่อปรับ'),s)}
+ <div class="sec">Size</div>${S.t!=='W5'?ctl(FONTC,s):''}${PICT.includes(S.t)?ctl(SL('pz','🖼️','Picture size',50,200,10,'ลากเพื่อปรับ'),s):''}${ctl(SL('tz','🔠','Text size',70,160,5,S.t==='W5'?'= ความสูงบรรทัด':'ลากเพื่อปรับ'),s)}${ctl(SL('iz','🗣️','IPA size',70,250,10,'/ˈaɪ.piː.eɪ/ ลากเพื่อปรับ'),s)}
  <div class="sec">Page</div>${common.map(c=>ctl(c,s)).join('')}${tail.map(c=>ctl(c,s)).join('')}
  </div><div class="sf"><span class="sum">${S.t==='X'?'':`📚 ${s._n} from ${escH(window.VTOPIC||'🍎 Fruits')} · `}${pages.length} pages · ${nS} for each student${pages.length>nS?` · ${pages.length-nS} for teacher`:''}</span><button class="bigpr" data-a="print">🖨️ Print · ${s.paper} ${s.orient==='l'?'▭':'▯'}</button></div>`;
  $('bbp').textContent=`🖨️ Print · ${pages.length}`;}
