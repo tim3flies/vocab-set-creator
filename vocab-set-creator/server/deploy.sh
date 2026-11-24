@@ -5,7 +5,7 @@ R=/srv/english; T=$(mktemp -d)
 curl -fsSL https://codeload.github.com/tim3flies/vocab-set-creator/tar.gz/main | tar xz -C "$T"
 S="$T/vocab-set-creator-main/vocab-set-creator"
 mkdir -p "$R/public/vocab" "$R/public/api"
-for f in index.html store.js cutter.js emoji.js stories.js worksheets.html ws-sets.js; do install -m 644 "$S/$f" "$R/public/vocab/$f"; done
+for f in index.html store.js cutter.js emoji.js scenes.js stories.js worksheets.html ws-sets.js; do install -m 644 "$S/$f" "$R/public/vocab/$f"; done
 install -m 644 "$S/server/api.php" "$R/public/api/index.php"
 install -m 644 "$S/server/root-index.html" "$R/public/index.html"
 install -m 755 "$S/server/deploy.sh" "$R/deploy.sh"
