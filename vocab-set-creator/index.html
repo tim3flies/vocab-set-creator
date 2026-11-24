@@ -167,7 +167,7 @@ body.dragging .dropzone{display:block}
 .fld label{font-size:13px;color:var(--muted);font-weight:700}
 .fld select,.fld input{height:40px;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:var(--paper);width:100%}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.wst{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.wst{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.wst a.nl{grid-column-start:1}
 .wst a{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-decoration:none;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:6px 8px;background:var(--paper);position:relative;min-width:0}
 .wst a:hover{border-color:var(--p)}
 .wst a .cd{font-size:11px;font-weight:800;border-radius:6px;padding:0 5px;color:#fff}
@@ -374,7 +374,7 @@ const LANGS=[['en','🇬🇧','English','en-GB'],['th','🇹🇭','ไทย','t
 const LG=c=>LANGS.find(l=>l[0]===c)||LANGS[0];
 
 /* ---------- worksheet types (same codes as the worksheet page) ---------- */
-const WT=[['L1','Hear & Pick','w'],['L2','Hear & Find','w'],['L3','Listen & Build','s'],['S1','Say It','w'],['S2','Talk Back','d'],['S3','Read Aloud','s'],['R1','Name It','w'],['R2','Find It','w'],['R3','Match Up','w'],['R4','Best Reply','d'],['R5','Word Order','s'],['R6','Fill the Blank','s'],['R7','Picture Story','t'],['R8','Word Search','w'],['W1','Spell It','w'],['W2','Fill It','w'],['W3','Listen & Type','s'],['W4','My Sentence','w'],['W5','Trace It','w'],['X','Custom','w']];
+const WT=[['L1','Hear & Pick','w'],['L2','Hear & Find','w'],['L3','Listen & Build','s'],['L4','Bingo','w'],['S1','Say It','w'],['S2','Talk Back','d'],['S3','Read Aloud','s'],['R1','Name It','w'],['R2','Find It','w'],['R3','Match Up','w'],['R4','Best Reply','d'],['R5','Word Order','s'],['R6','Fill the Blank','s'],['R7','Picture Story','t'],['R8','Word Search','w'],['W1','Spell It','w'],['W2','Fill It','w'],['W3','Listen & Type','s'],['W4','My Sentence','w'],['W5','Trace It','w'],['X','Custom','w']];
 const SKC={L:'#c2410c',S:'#7c3aed',R:'#1d4ed8',W:'#be123c',X:'#6d28d9'};
 
 /* ---------- settings (this device) ---------- */
@@ -461,7 +461,7 @@ function renderTabs(){const c=counts(SET);$('tabs').innerHTML=[['w','🖼️','W
 function sideHTML(){const c=counts(SET),need={w:c.w>=2,s:c.s>0,d:c.d>0,t:c.t>0};
  return`<div class="sc">
  <a class="wsbig" href="worksheets.html?set=${SET.id}">🖨️ Make worksheets</a>
- <div><h3>🖨️ Print as…</h3><div class="wst">${WT.map(t=>{const ok=need[t[2]];return`<a href="worksheets.html?set=${SET.id}&t=${t[0]}" class="${ok?'':'dim'}" title="${t[1]}${ok?'':' · needs '+{w:'2+ words',s:'sentences',d:'dialogues',t:'stories'}[t[2]]}"><span class="cd" style="background:${SKC[t[0][0]]}">${t[0]}</span><span class="nm2">${t[1]}</span>${ok?'':'<i class="dot"></i>'}</a>`}).join('')}</div><p class="hint" style="margin:6px 0 0"><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amber)"></i> = add sentences / talk / stories first (otherwise sample data is used)</p></div>
+ <div><h3>🖨️ Print as…</h3><div class="wst">${WT.map((t,k)=>{const ok=need[t[2]],nl=k&&t[0][0]!==WT[k-1][0][0]&&t[0]!=='X';return`<a href="worksheets.html?set=${SET.id}&t=${t[0]}" class="${ok?'':'dim'}${nl?' nl':''}" title="${t[1]}${ok?'':' · needs '+{w:'2+ words',s:'sentences',d:'dialogues',t:'stories'}[t[2]]}"><span class="cd" style="background:${SKC[t[0][0]]}">${t[0]}</span><span class="nm2">${t[1]}</span>${ok?'':'<i class="dot"></i>'}</a>`}).join('')}</div><p class="hint" style="margin:6px 0 0"><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amber)"></i> = add sentences / talk / stories first (otherwise sample data is used)</p></div>
  <div><h3>🌐 Languages</h3><div class="two"><div class="fld"><label>🔤 Learn</label><select data-f="lang">${LANGS.map(l=>`<option value="${l[0]}" ${SET.lang===l[0]?'selected':''}>${l[1]} ${l[2]}</option>`).join('')}</select></div><div class="fld"><label>🏠 Meaning</label><select data-f="mt">${LANGS.map(l=>`<option value="${l[0]}" ${SET.mt===l[0]?'selected':''}>${l[1]} ${l[2]}</option>`).join('')}</select></div></div></div>
  <div><h3>📦 This set</h3><div class="rowb"><button class="ib" data-a="export">⬇️ <span class="lb">Export</span></button><button class="ib" data-a="dup">⧉ <span class="lb">Copy</span></button><button class="ib" data-a="delset" style="color:var(--red)">🗑 <span class="lb">Delete</span></button></div><p class="hint" style="margin:8px 0 0">Saved on this device automatically. Export makes a file you can share or move to another device (pictures included).</p></div>
  </div>`}
