@@ -8,7 +8,7 @@
    b.textContent='⚠️ Something broke on this page: '+msg+(line?' ('+String(src||'').split('/').pop()+':'+line+')':'')+'. It was reported automatically.';b.onclick=()=>b.remove();(document.body||document.documentElement).appendChild(b)}catch(e){}
   try{fetch(API+'?a=log',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({p:location.pathname+location.search,m:msg,s:String(src||''),l:line||0,c:col||0,st:String(stack||'').slice(0,1500),ua:navigator.userAgent})}).catch(()=>{})}catch(e){}}
  window.__report=rep;
- addEventListener('error',e=>{if(e&&e.message)rep(e.message,e.filename,e.lineno,e.colno,e.error&&e.error.stack)});
+ addEventListener('error',e=>{if(e&&e.message&&!/ResizeObserver loop/.test(e.message))rep(e.message,e.filename,e.lineno,e.colno,e.error&&e.error.stack)});
  addEventListener('unhandledrejection',e=>{const r=e&&e.reason;rep('Promise: '+(r&&r.message||r),'',0,0,r&&r.stack)});
 })();
 (function(){

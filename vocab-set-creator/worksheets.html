@@ -68,7 +68,7 @@ button:focus-visible{outline:3px solid var(--p);outline-offset:2px}
 .ph h2{font-size:17px;margin:0;font-family:var(--kid)}
 .ph .how{display:flex;gap:4px;align-items:center;font-size:13px;color:var(--muted)}
 .ph .pc{margin-left:auto;font-size:13px;color:var(--muted);font-weight:700}
-.prev{flex:1;min-height:0;overflow:auto;background:repeating-linear-gradient(45deg,var(--s2) 0 10px,var(--bg) 10px 20px);padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.prev{flex:1;min-height:0;overflow-x:auto;overflow-y:scroll;background:repeating-linear-gradient(45deg,var(--s2) 0 10px,var(--bg) 10px 20px);padding:14px;display:flex;flex-direction:column;align-items:center;gap:6px}
 .pl{align-self:stretch;display:flex;gap:6px;align-items:center;font-size:12.5px;font-weight:800;color:var(--muted);margin-top:6px}
 .pl i{font-style:normal;background:var(--paper);border:1px solid var(--line);border-radius:99px;padding:1px 9px}
 .box{flex:none;box-shadow:0 3px 12px rgba(0,0,0,.18);background:#fff}
@@ -667,7 +667,8 @@ function fitParts(root){root.querySelectorAll('.part').forEach(pt=>{const sh=pt.
  let f=1;for(let k=0;k<3&&bad();k++){f*=0.88;pt.style.setProperty('--tz',(tz*f).toFixed(3));pt.style.setProperty('--pic',`calc(${pic} * ${f.toFixed(3)})`)}})}
 function fitTrace(root){root.querySelectorAll('svg.trw').forEach(v=>{const W=v.clientWidth,H=v.clientHeight;if(!W||!H)return;const need=Math.max(+v.dataset.cw,140*W/H);v.setAttribute('viewBox',`0 0 ${need} 140`)})}
 function fit(){const pv=$('prev');const avail=pv.clientWidth-28;document.querySelectorAll('#prev .box').forEach(b=>{const p=PAGES[+b.dataset.i];const wpx=p.w*PX,hpx=p.h*PX;const sc=Math.min(1,avail/wpx);b.style.width=wpx*sc+'px';b.style.height=hpx*sc+'px';b.firstElementChild.style.transform=`scale(${sc})`})}
-new ResizeObserver(()=>fit()).observe($('prev'));
+/* Safari: refit only when the width really changes, once per frame (stops the resize loop) */
+let FIT_W=-1,FIT_R=0;new ResizeObserver(()=>{if(FIT_R)return;FIT_R=requestAnimationFrame(()=>{FIT_R=0;const w=$('prev').clientWidth;if(Math.abs(w-FIT_W)<2)return;FIT_W=w;fit()})}).observe($('prev'));
 function toast(m){const el=$('toast');el.textContent=m;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),2600)}
 function doPrint(){const s=st();const [w,h]=dims(s);let ps=document.getElementById('pgsz');if(!ps){ps=document.createElement('style');ps.id='pgsz';document.head.appendChild(ps)}
  ps.textContent=`@page{size:${w}mm ${h}mm;margin:0}`;$('printroot').innerHTML=PAGES.map(p=>p.html).join('');$('printroot').style.cssText='display:block;position:absolute;left:-99999px;top:0';fitParts($('printroot'));fitTrace($('printroot'));drawLines($('printroot'));$('printroot').style.cssText='';
