@@ -1,0 +1,599 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bokogo Vocab Sets</title>
+<meta name="description" content="Make vocabulary sets (word, picture, IPA, meaning, sentences, dialogues, stories) and print them as worksheets.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&family=Andika:wght@400;700&display=swap">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+<style>
+:root{
+ --p:#14b8a6;--p6:#0d9488;--p7:#0f766e;--mint:#ccfbf1;--mint2:#f0fdfa;
+ --ink:#111827;--muted:#5f6b6a;--line:#dfe7e5;--bg:#eef3f2;--paper:#fff;--s2:#f6f9f8;
+ --amber:#fbbf24;--ambb:#fef3c7;--red:#e11d48;--redb:#ffe4ec;
+ --L:#c2410c;--Lb:#fff1dc;--S:#7c3aed;--Sb:#efe9ff;--R:#1d4ed8;--Rb:#e3edff;--W:#be123c;--Wb:#ffe4ec;--X:#6d28d9;--Xb:#f3eefe;
+ --ui:'Sarabun',system-ui,sans-serif;--kid:'Andika','Sarabun',system-ui,sans-serif;
+ --emo:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;
+ --r:12px;--top:56px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:var(--ui);color:var(--ink);background:var(--bg);font-size:15px;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+input,select,textarea{font-size:16px}
+[hidden]{display:none!important}
+.emo{font-family:var(--emo)}
+
+/* ---------- top bar ---------- */
+.top{position:sticky;top:0;z-index:20;height:calc(var(--top) + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) max(10px,env(safe-area-inset-right,0px)) 0 max(10px,env(safe-area-inset-left,0px));display:flex;align-items:center;gap:8px;background:var(--paper);border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:18px;white-space:nowrap}
+.logo i{font-style:normal;width:30px;height:30px;border-radius:9px;background:linear-gradient(#0d9488,#047857);color:#fff;display:grid;place-items:center;font-weight:800}
+.logo small{font-weight:600;color:var(--muted);font-size:13px}
+.sp{flex:1;min-width:0}
+.ib{text-decoration:none;color:inherit;height:40px;min-width:40px;padding:0 10px;border-radius:12px;border:1px solid var(--line);background:var(--paper);display:inline-flex;align-items:center;justify-content:center;gap:6px;font-weight:700;white-space:nowrap}
+.ib:hover{background:var(--s2)}
+.ib.pri{background:var(--p7);border-color:var(--p7);color:#fff!important}
+.ib.pri:hover{background:#0b5f58}
+.ib .lb{font-size:14px}
+.bigemo{font-size:24px;font-family:var(--emo);line-height:1}
+.nm{flex:1;min-width:0;height:40px;border:1px solid transparent;border-radius:10px;padding:0 10px;font-weight:800;font-size:18px;background:transparent}
+.nm:hover{border-color:var(--line)}.nm:focus{outline:none;border-color:var(--p);background:var(--paper)}
+
+/* ---------- library ---------- */
+.libw{max-width:1200px;margin:0 auto;padding:14px 12px calc(96px + env(safe-area-inset-bottom,0px))}
+.lh{display:flex;align-items:center;gap:8px;margin:2px 2px 12px}
+.lh h2{margin:0;font-size:17px}
+.lh .muted{color:var(--muted);font-size:13px}
+.grid{display:grid;grid-template-columns:1fr;gap:10px}
+.vcard{min-width:0;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px;cursor:pointer;text-align:left;position:relative}
+.vcard:hover{border-color:var(--p)}
+.vc1{display:flex;gap:10px;align-items:center}
+.vc1 .ic{width:48px;height:48px;border-radius:14px;background:var(--mint2);display:grid;place-items:center;font-size:30px;font-family:var(--emo);flex:none;overflow:hidden}
+.vc1 .ic img{width:100%;height:100%;object-fit:cover}
+.vc1 b{font-size:16.5px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cnt{display:flex;gap:10px;color:var(--muted);font-size:13.5px;flex-wrap:wrap}
+.cnt span{white-space:nowrap}
+.strip{display:flex;gap:6px;overflow:hidden}
+.strip span{width:40px;height:40px;flex:none;border-radius:10px;background:var(--s2);display:grid;place-items:center;font-size:24px;font-family:var(--emo);overflow:hidden}
+.strip span img{width:100%;height:100%;object-fit:contain}
+.vca{display:flex;gap:8px}
+.vca .ib{flex:1}
+.empty{background:var(--paper);border:2px dashed var(--line);border-radius:18px;padding:28px 18px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px}
+.empty .big{font-size:56px;font-family:var(--emo);line-height:1}
+.empty p{margin:0;color:var(--muted);max-width:420px}
+.empty .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.fab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:25;height:54px;padding:0 20px;border-radius:27px;border:0;background:var(--p7);color:#fff;font-weight:800;font-size:16px;box-shadow:0 8px 20px rgba(15,118,110,.35)}
+
+/* ---------- editor ---------- */
+.edb{display:flex;min-height:calc(100dvh - var(--top))}
+.side{display:none}
+.main{flex:1;min-width:0;container:main/inline-size;display:flex;flex-direction:column}
+.tabs{position:sticky;top:calc(var(--top) + env(safe-area-inset-top,0px));z-index:15;display:flex;background:var(--paper);border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:1;min-width:76px;border:0;background:none;padding:8px 6px 7px;display:flex;flex-direction:column;align-items:center;gap:1px;border-bottom:3px solid transparent;color:var(--muted);font-weight:700;font-size:12.5px}
+.tabs button .e{font-size:20px;font-family:var(--emo);line-height:1.1}
+.tabs button .n{font-size:11.5px;background:var(--s2);border-radius:9px;padding:0 6px;font-weight:700}
+.tabs button.on{color:var(--p7);border-bottom-color:var(--p7)}
+.tabs button.on .n{background:var(--mint);color:var(--p7)}
+.tools{display:flex;gap:6px;padding:10px 10px 4px;overflow-x:auto;scrollbar-width:none}
+.tools::-webkit-scrollbar{display:none}
+.chip{flex:none;height:36px;padding:0 12px;border-radius:18px;border:1px solid var(--line);background:var(--paper);font-weight:700;font-size:13.5px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.chip:hover{border-color:var(--p)}
+.chip.ai{background:linear-gradient(90deg,#f0fdfa,#f5f3ff);border-color:#c4b5fd}
+.chip.on{background:var(--p7);color:#fff;border-color:var(--p7)}
+.chip:disabled{opacity:.55}
+.pane{flex:1;padding:6px 10px 12px}
+.hint{color:var(--muted);font-size:13px;line-height:1.45}
+.hint code{background:var(--s2);border:1px solid var(--line);border-radius:6px;padding:0 4px;font-size:12.5px}
+
+/* word list */
+.wl{display:flex;flex-direction:column;gap:8px}
+.wh{display:none}
+.wr{display:grid;grid-template-columns:64px 1fr 40px;gap:8px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:8px}
+.wr.new{animation:fl 1.2s}
+@keyframes fl{0%{background:var(--mint)}100%{background:var(--paper)}}
+.pk{width:64px;height:64px;border-radius:12px;border:1.5px dashed #b9cbc7;background:var(--s2);display:grid;place-items:center;font-size:38px;font-family:var(--emo);line-height:1;padding:0;overflow:hidden;position:relative}
+.pk.has{border-style:solid;border-color:var(--line);background:#fff}
+.pk img{width:100%;height:100%;object-fit:contain}
+.pk .add{font-size:22px;opacity:.6}
+.pk.ov{border-color:var(--p);background:var(--mint)}
+.pk .ai{position:absolute;right:2px;bottom:2px;font-size:11px;background:#ede9fe;border-radius:6px;padding:0 3px}
+.f{min-width:0;display:flex;flex-direction:column;gap:4px}
+.fi{width:100%;min-width:0;height:34px;border:1px solid transparent;border-radius:8px;padding:0 8px;background:transparent}
+.fi:hover{border-color:var(--line)}
+.fi:focus{outline:none;border-color:var(--p);background:#fff}
+.fw_{font-family:var(--kid);font-weight:700;font-size:19px;height:36px}
+.f2{display:flex;gap:4px;min-width:0}
+.fx{flex:1;min-width:0;display:flex;align-items:center;background:var(--s2);border-radius:8px;padding-left:6px}
+.fx>span{flex:none;color:var(--muted);font-size:13px}
+.fx .fi{height:30px;font-size:14px}
+.fx.ipa .fi{font-family:'Andika','Lucida Sans Unicode','Arial Unicode MS',sans-serif;color:#0f766e}
+.fx.miss{background:#fff7e6}
+.acs{display:flex;flex-direction:column;gap:4px}
+.mini{width:38px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--paper);font-size:16px;font-family:var(--emo);padding:0}
+.mini:hover{background:var(--s2)}
+.mini.del:hover{background:var(--redb);border-color:#fda4af}
+.addbar{position:sticky;bottom:0;z-index:12;background:linear-gradient(transparent,var(--bg) 14px);padding:14px 10px calc(10px + env(safe-area-inset-bottom,0px))}
+.addbar form{display:flex;gap:8px;background:var(--paper);border:1.5px solid var(--p);border-radius:16px;padding:6px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+.addbar input{flex:1;min-width:0;border:0;outline:none;padding:0 8px;font-family:var(--kid);font-size:18px;background:transparent}
+.addbar button{height:42px;padding:0 16px;border:0;border-radius:12px;background:var(--p7);color:#fff;font-weight:800;font-size:16px}
+.cntline{display:flex;align-items:center;gap:8px;margin:2px 2px 8px;color:var(--muted);font-size:13px;flex-wrap:wrap}
+.cntline b{color:var(--ink)}
+.dropzone{border:2px dashed var(--p);background:var(--mint2);border-radius:16px;padding:18px;text-align:center;color:var(--p7);font-weight:700;display:none}
+body.dragging .dropzone{display:block}
+
+/* text tabs */
+.tx{display:flex;flex-direction:column;gap:10px}
+.tx textarea{width:100%;min-height:200px;border:1px solid var(--line);border-radius:14px;padding:10px 12px;font-family:var(--kid);font-size:16px;line-height:1.6;resize:vertical;background:var(--paper)}
+.tx textarea:focus{outline:none;border-color:var(--p)}
+.fmt{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.fmt summary{font-weight:700;cursor:pointer;font-size:14px}
+.fmt pre{margin:8px 0 0;white-space:pre-wrap;font-family:var(--kid);font-size:14px;background:var(--s2);border-radius:10px;padding:8px 10px}
+.pv{display:flex;flex-direction:column;gap:6px}
+.pvr{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:8px 10px;display:grid;grid-template-columns:24px 1fr 38px;gap:8px;align-items:center}
+.pvr .no{color:var(--muted);font-weight:700;font-size:13px;text-align:center}
+.pvr .en{font-family:var(--kid);font-size:16px}
+.pvr .en mark{background:var(--mint);color:var(--p7);border-radius:4px;padding:0 2px;font-weight:700}
+.pvr .en .bl{border-bottom:2px solid var(--p7);color:var(--p7);font-weight:700;padding:0 4px}
+.pvr .th{color:var(--muted);font-size:14px}
+.pvr .th.miss{color:#b45309}
+.pvr .ip{color:#0f766e;font-size:13px;font-family:'Andika',sans-serif}
+.story{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.story .st{font-family:var(--kid);font-size:15.5px;margin-bottom:6px}
+.story .q{font-size:14px;padding:3px 0;border-top:1px dashed var(--line)}
+.story .q b{color:var(--R)}
+.story .q small{color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:4px;background:var(--s2);border-radius:9px;padding:1px 8px;font-size:12.5px;font-weight:700;color:var(--muted)}
+.badge.warn{background:#fff7e6;color:#b45309}
+.badge.ok{background:var(--mint);color:var(--p7)}
+
+/* side panel content (also used in the ⋮ sheet) */
+.sc{display:flex;flex-direction:column;gap:14px}
+.sc h3{margin:0 0 6px;font-size:14px;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:6px}
+.fld{display:flex;flex-direction:column;gap:4px}
+.fld label{font-size:13px;color:var(--muted);font-weight:700}
+.fld select,.fld input{height:40px;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:var(--paper);width:100%}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.wst{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.wst a{display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-decoration:none;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:6px 8px;background:var(--paper);position:relative;min-width:0}
+.wst a:hover{border-color:var(--p)}
+.wst a .cd{font-size:11px;font-weight:800;border-radius:6px;padding:0 5px;color:#fff}
+.wst a .nm2{font-size:12.5px;font-weight:700;line-height:1.2;max-width:100%;overflow-wrap:anywhere}
+.wst a.dim{opacity:.55}
+.wst a .dot{position:absolute;right:6px;top:6px;width:8px;height:8px;border-radius:50%;background:var(--amber)}
+.wsbig{display:flex;align-items:center;justify-content:center;gap:8px;height:48px;border-radius:14px;background:var(--p7);color:#fff;text-decoration:none;font-weight:800;font-size:16px}
+.rowb{display:flex;gap:6px;flex-wrap:wrap}
+.rowb .ib{flex:1}
+
+/* sheets / dialogs */
+.scrim{position:fixed;inset:0;background:rgba(17,24,39,.38);z-index:40;opacity:0;pointer-events:none;transition:opacity .2s}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;background:var(--paper);border-radius:22px 22px 0 0;max-height:88dvh;display:flex;flex-direction:column;transform:translateY(105%);transition:transform .25s ease;box-shadow:0 -10px 30px rgba(0,0,0,.15)}
+.sheet.on{transform:none}
+.sh-h{display:flex;align-items:center;gap:8px;padding:12px 14px 8px;border-bottom:1px solid var(--line)}
+.sh-h h2{margin:0;font-size:17px;flex:1;min-width:0;display:flex;align-items:center;gap:8px}
+.sh-b{overflow:auto;padding:12px 14px calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px}
+.grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:8px auto 0}
+
+/* picture picker */
+.pp1{display:flex;gap:12px;align-items:center}
+.ppv{width:96px;height:96px;border-radius:16px;border:1px solid var(--line);display:grid;place-items:center;font-size:64px;font-family:var(--emo);overflow:hidden;flex:none;background:var(--s2)}
+.ppv img{width:100%;height:100%;object-fit:contain;background:#fff}
+.ppw{font-family:var(--kid);font-size:24px;font-weight:700}
+.pps{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:6px}
+.pps button{height:52px;border-radius:12px;border:1px solid var(--line);background:var(--paper);font-size:30px;font-family:var(--emo);padding:0}
+.pps button:hover,.pps button.on{border-color:var(--p);background:var(--mint2)}
+.srch{display:flex;gap:6px}
+.srch input{flex:1;min-width:0;height:42px;border:1px solid var(--line);border-radius:12px;padding:0 12px}
+.big3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.big3 button,.big3 label{height:72px;border-radius:14px;border:1px solid var(--line);background:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-weight:700;font-size:13px;cursor:pointer}
+.big3 .e{font-size:26px;font-family:var(--emo);line-height:1}
+.big3 button:hover,.big3 label:hover{border-color:var(--p);background:var(--mint2)}
+.styles{display:flex;gap:6px;flex-wrap:wrap}
+.aibox{border:1px solid #c4b5fd;background:#faf8ff;border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.aibox textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-height:64px;resize:vertical}
+.keywarn{background:#fff7e6;border:1px solid #fcd34d;color:#92400e;border-radius:12px;padding:8px 10px;font-size:13.5px}
+.keywarn button{border:0;background:none;color:var(--p7);font-weight:800;text-decoration:underline;padding:0}
+.prog{height:6px;border-radius:3px;background:var(--s2);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--p);width:0;transition:width .2s}
+.toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:#111827;color:#fff;border-radius:14px;padding:10px 16px;font-size:14px;z-index:60;opacity:0;pointer-events:none;transition:.2s;max-width:calc(100% - 32px);text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.newopt{display:grid;grid-template-columns:1fr;gap:8px}
+.newopt button{display:flex;align-items:center;gap:12px;text-align:left;border:1px solid var(--line);border-radius:14px;background:var(--paper);padding:12px}
+.newopt button:hover{border-color:var(--p);background:var(--mint2)}
+.newopt .e{font-size:30px;font-family:var(--emo);flex:none;width:40px;text-align:center}
+.newopt b{display:block}
+.newopt small{color:var(--muted)}
+.iconpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px}
+.iconpick button{height:44px;border-radius:10px;border:1px solid var(--line);background:var(--paper);font-size:24px;font-family:var(--emo);padding:0}
+.iconpick button.on{border-color:var(--p7);background:var(--mint)}
+
+/* ---------- bigger screens (small-first) ---------- */
+@container main (min-width:640px){
+ .wh{display:grid;grid-template-columns:64px minmax(120px,1.2fr) minmax(110px,1fr) minmax(110px,1.1fr) 84px;gap:8px;padding:0 8px;color:var(--muted);font-size:12.5px;font-weight:700}
+ .wr{grid-template-columns:64px minmax(120px,1.2fr) minmax(110px,1fr) minmax(110px,1.1fr) 84px}
+ .f,.f2{display:contents}
+ .fx{height:40px}
+ .fx .fi{height:38px;font-size:15px}
+ .acs{flex-direction:row}
+ .pvr{grid-template-columns:28px 1.3fr 1fr 38px}
+ .pane{padding:6px 16px 12px}
+ .tools{padding:12px 16px 4px}
+ .addbar{padding-left:16px;padding-right:16px}
+}
+@media (min-width:600px){
+ .grid{grid-template-columns:repeat(2,1fr)}
+ .sheet{left:50%;right:auto;bottom:50%;width:min(560px,calc(100% - 32px));border-radius:22px;transform:translate(-50%,60%);opacity:0;transition:transform .2s,opacity .2s;max-height:min(86dvh,760px)}
+ .sheet.on{transform:translate(-50%,50%);opacity:1}
+ .grab{display:none}
+ .newopt{grid-template-columns:1fr 1fr}
+ .wst{grid-template-columns:repeat(4,1fr)}
+}
+@media (min-width:900px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media (min-width:1024px){
+ .side{display:block;width:320px;flex:none;border-right:1px solid var(--line);background:var(--paper);padding:14px;position:sticky;top:calc(var(--top) + env(safe-area-inset-top,0px));height:calc(100dvh - var(--top) - env(safe-area-inset-top,0px));overflow:auto}
+ .wst{grid-template-columns:repeat(3,1fr)}
+ .onlyS{display:none!important}
+ .grid{grid-template-columns:repeat(4,1fr)}
+}
+@media (max-width:420px){.ib .lb.hs{display:none}.logo small{display:none}}
+@media (max-width:1023px){.onlyW{display:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ============ LIBRARY ============ -->
+<div id="vLib">
+ <header class="top">
+  <div class="logo"><i>b</i>📚 Vocab Sets <small>Bokogo</small></div>
+  <span class="sp"></span>
+  <button class="ib" data-a="import" title="Import a set or an old Bingo backup"><span class="emo">⬆️</span><span class="lb hs">Import</span></button>
+  <a class="ib" href="worksheets.html" title="Worksheets" style="text-decoration:none;color:inherit"><span class="emo">🖨️</span><span class="lb hs">Worksheets</span></a>
+  <button class="ib" data-a="settings" title="Settings"><span class="emo">⚙️</span></button>
+ </header>
+ <main class="libw">
+  <div class="lh"><h2>My vocab sets</h2><span class="muted" id="libn"></span></div>
+  <div class="grid" id="grid"></div>
+ </main>
+ <button class="fab" data-a="new">＋ New set</button>
+</div>
+
+<!-- ============ EDITOR ============ -->
+<div id="vEd" hidden>
+ <header class="top">
+  <button class="ib" data-a="home" title="All sets">‹ <span class="emo">📚</span></button>
+  <button class="ib" data-a="icon" title="Set picture" id="edIcon"><span class="bigemo">📚</span></button>
+  <input class="nm" id="edName" aria-label="Set name" placeholder="Set name">
+  <a class="ib pri" id="edPrint" href="worksheets.html" title="Make worksheets"><span class="emo">🖨️</span><span class="lb hs">Worksheets</span></a>
+  <button class="ib onlyS" data-a="more" title="Set options">⋮</button>
+ </header>
+ <div class="edb">
+  <aside class="side" id="side"></aside>
+  <section class="main">
+   <nav class="tabs" id="tabs"></nav>
+   <div class="tools" id="tools"></div>
+   <div class="pane" id="pane"></div>
+   <div class="addbar" id="addbar">
+    <form id="addf" autocomplete="off"><input id="addw" placeholder="Type a word, or paste many lines" enterkeyhint="done" aria-label="New word"><button type="submit">＋</button></form>
+   </div>
+  </section>
+ </div>
+</div>
+
+<div class="scrim" id="scrim" data-a="close"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"><div class="grab"></div><div class="sh-h"><h2 id="shT"></h2><button class="ib" data-a="close" aria-label="Close">✕</button></div><div class="sh-b" id="shB"></div></div>
+<div class="toast" id="toast"></div>
+<input type="file" id="fImg" accept="image/*" hidden>
+<input type="file" id="fImgs" accept="image/*" multiple hidden>
+<input type="file" id="fImp" accept=".json,.zip,application/json,application/zip" multiple hidden>
+
+<script src="store.js"></script>
+<script src="emoji.js"></script>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const esc=t=>String(t??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+let toastT;function toast(m,ms){const t=$('toast');t.innerHTML=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),ms||2600)}
+
+/* ---------- languages ---------- */
+const LANGS=[['en','🇬🇧','English','en-GB'],['th','🇹🇭','ไทย','th-TH'],['zh','🇨🇳','中文','zh-CN'],['ja','🇯🇵','日本語','ja-JP'],['ko','🇰🇷','한국어','ko-KR'],['vi','🇻🇳','Tiếng Việt','vi-VN'],['id','🇮🇩','Indonesia','id-ID'],['ms','🇲🇾','Melayu','ms-MY'],['my','🇲🇲','မြန်မာ','my-MM'],['lo','🇱🇦','ລາວ','lo-LA'],['km','🇰🇭','ខ្មែរ','km-KH'],['fil','🇵🇭','Filipino','fil-PH'],['hi','🇮🇳','हिन्दी','hi-IN'],['ar','🇸🇦','العربية','ar-SA'],['es','🇪🇸','Español','es-ES'],['fr','🇫🇷','Français','fr-FR'],['de','🇩🇪','Deutsch','de-DE'],['pt','🇧🇷','Português','pt-BR'],['ru','🇷🇺','Русский','ru-RU']];
+const LG=c=>LANGS.find(l=>l[0]===c)||LANGS[0];
+
+/* ---------- worksheet types (same codes as the worksheet page) ---------- */
+const WT=[['L1','Hear & Pick','w'],['L2','Hear & Find','w'],['L3','Listen & Build','s'],['S1','Say It','w'],['S2','Talk Back','d'],['S3','Read Aloud','s'],['R1','Name It','w'],['R2','Find It','w'],['R3','Match Up','w'],['R4','Best Reply','d'],['R5','Word Order','s'],['R6','Fill the Blank','s'],['R7','Picture Story','t'],['W1','Spell It','w'],['W2','Fill It','w'],['W3','Listen & Type','s'],['W4','My Sentence','w'],['W5','Trace It','w'],['X','Custom','w']];
+const SKC={L:'#c2410c',S:'#7c3aed',R:'#1d4ed8',W:'#be123c',X:'#6d28d9'};
+
+/* ---------- settings (this device) ---------- */
+const CFG_K='bokogo.vset.cfg';
+let CFG={key:'',tm:'gemini-2.5-flash',im:'gemini-2.5-flash-image',sty:'cute',lang:'en',mt:'th'};
+try{Object.assign(CFG,JSON.parse(localStorage.getItem(CFG_K)||'{}'))}catch(e){}
+const saveCfg=()=>{try{localStorage.setItem(CFG_K,JSON.stringify(CFG))}catch(e){}};
+const STY=[['cute','🧸 Cute','cute kawaii cartoon sticker, thick clean outline, soft colours'],['flat','🔷 Flat icon','simple flat vector icon, bold shapes, few colours'],['real','📷 Real','realistic photo of a single object, studio light'],['water','🎨 Watercolor','soft watercolor children\'s book illustration'],['clay','🧱 Clay 3D','cute 3D clay render, soft light'],['line','✏️ Line art','black line drawing for colouring, no fill']];
+
+/* ---------- state ---------- */
+let SETS=[],SET=null,TAB='w',saveT=null,PICK=-1;
+const save=(now)=>{if(!SET)return;clearTimeout(saveT);const go=()=>VS.put(SET).catch(e=>toast('⚠️ Save failed: '+esc(e.message)));if(now)return go();saveT=setTimeout(go,400)};
+
+/* ---------- images ---------- */
+function fileToData(f){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=no;r.readAsDataURL(f)})}
+function shrink(src,max=384){return new Promise((ok)=>{const im=new Image();im.onload=()=>{const s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.width*s));c.height=Math.max(1,Math.round(im.height*s));c.getContext('2d').drawImage(im,0,0,c.width,c.height);let d=c.toDataURL('image/webp',.86);if(!d.startsWith('data:image/webp'))d=c.toDataURL('image/png');ok(d)};im.onerror=()=>ok(src);im.src=src})}
+const picHTML=(w,cls)=>w.img?`<img src="${w.img}" alt="">`:w.e?esc(w.e):`<span class="add">＋🖼️</span>`;
+
+/* ---------- speech ---------- */
+function speak(t,lang){if(!t||!window.speechSynthesis)return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t),l=LG(lang||SET?.lang||'en')[3];u.lang=l;u.rate=.9;const v=speechSynthesis.getVoices().find(v=>v.lang.replace('_','-').toLowerCase().startsWith(l.slice(0,2).toLowerCase()));if(v)u.voice=v;speechSynthesis.speak(u)}
+
+/* ---------- free look-ups (no key) ---------- */
+async function freeIPA(w){try{const r=await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(w.toLowerCase()));if(!r.ok)return'';const j=await r.json();const ps=(j||[]).flatMap(e=>[e.phonetic,...(e.phonetics||[]).map(p=>p.text)]).filter(Boolean);const uk=(j||[]).flatMap(e=>(e.phonetics||[]).filter(p=>/-uk\./.test(p.audio||'')&&p.text).map(p=>p.text));return String(uk[0]||ps[0]||'').replace(/^[\/\[]|[\/\]]$/g,'')}catch(e){return''}}
+async function freeTr(t,from,to){try{const r=await fetch('https://api.mymemory.translated.net/get?q='+encodeURIComponent(t)+'&langpair='+from+'|'+to);if(!r.ok)return'';const j=await r.json();const s=j?.responseData?.translatedText||'';return /MYMEMORY|QUERY LENGTH/i.test(s)?'':s}catch(e){return''}}
+
+/* ---------- Gemini (key stays on this device; called straight from the browser) ---------- */
+const hasKey=()=>!!(CFG.key||'').trim();
+async function gem(model,body){const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':CFG.key.trim()},body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j?.error?.message||('HTTP '+r.status));return j}
+async function gemJSON(prompt){const j=await gem(CFG.tm,{contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:'application/json',temperature:.4}});const t=(j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('');return JSON.parse(t.replace(/^```json|```$/g,''))}
+async function gemText(prompt){const j=await gem(CFG.tm,{contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.7}});return (j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').replace(/^```\w*\n?|```$/g,'').trim()}
+async function gemImage(word,sty){const st=(STY.find(s=>s[0]===sty)||STY[0])[2];const j=await gem(CFG.im,{contents:[{parts:[{text:`Draw ONE picture of "${word}" for a children's English vocabulary card. Style: ${st}. Plain white background, the object centred and filling most of the square, no text, no letters, no words, no border.`}]}],generationConfig:{responseModalities:['IMAGE','TEXT']}});const p=(j.candidates?.[0]?.content?.parts||[]).find(p=>p.inlineData||p.inline_data);if(!p)throw new Error('No picture came back');const d=p.inlineData||p.inline_data;return shrink(`data:${d.mimeType||d.mime_type||'image/png'};base64,${d.data}`)}
+const keyWarn=()=>`<div class="keywarn">✨ AI needs a Gemini API key (free at Google AI Studio). <button data-a="settings">⚙️ Add key</button></div>`;
+
+/* =================== LIBRARY =================== */
+async function showLib(){SET=null;$('vEd').hidden=true;$('vLib').hidden=false;document.title='Bokogo Vocab Sets';history.replaceState(null,'',location.pathname);SETS=await VS.all();renderLib()}
+function counts(s){return{w:s.words.length,s:VS.lines(s.sen).length,d:VS.lines(s.dlg).length,t:String(s.sto||'').split(/\n\s*\n/).filter(b=>b.trim()).length}}
+function renderLib(){const g=$('grid');$('libn').textContent=SETS.length?SETS.length+' sets':'';
+ if(!SETS.length){g.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="big">📚🖼️🔤</div><h2 style="margin:0">Make your first vocab set</h2><p>Words + pictures + IPA + meaning. Then print them as worksheets.</p><div class="row"><button class="ib pri" data-a="new">＋ New set</button><button class="ib" data-a="demo">🍎 Try a sample</button><button class="ib" data-a="import">⬆️ Import Bingo backup</button></div></div>`;return}
+ g.innerHTML=SETS.map(s=>{const c=counts(s);return`<div class="vcard" data-open="${s.id}" role="button" tabindex="0"><div class="vc1"><div class="ic">${esc(s.icon||'📚')}</div><div style="min-width:0;flex:1"><b>${esc(s.name)}</b><div class="cnt"><span>🖼️ ${c.w}</span><span>📝 ${c.s}</span><span>💬 ${c.d}</span><span>📖 ${c.t}</span></div></div></div><div class="strip">${s.words.slice(0,8).map(w=>`<span>${w.img?`<img src="${w.img}" alt="">`:esc(w.e||'·')}</span>`).join('')}</div><div class="vca"><button class="ib" data-open="${s.id}">✏️ <span class="lb">Edit</span></button><a class="ib pri" href="worksheets.html?set=${s.id}" style="text-decoration:none" data-cur="${s.id}">🖨️ <span class="lb">Print</span></a></div></div>`}).join('')}
+
+/* =================== EDITOR =================== */
+async function openSet(id){const s=await VS.get(id);if(!s){toast('Set not found');return showLib()}SET=s;['words','sen','dlg','sto'].forEach(k=>{if(SET[k]==null)SET[k]=k==='words'?[]:''});SET.ipa=SET.ipa||{};VS.cur.set(id);
+ $('vLib').hidden=true;$('vEd').hidden=false;history.replaceState(null,'','?set='+id);renderEd();scrollTo(0,0)}
+function renderEd(){document.title=SET.name+' · Vocab Sets';$('edIcon').innerHTML=`<span class="bigemo">${esc(SET.icon||'📚')}</span>`;const n=$('edName');if(document.activeElement!==n)n.value=SET.name;$('edPrint').href='worksheets.html?set='+SET.id;renderTabs();renderSide();renderPane()}
+function renderTabs(){const c=counts(SET);$('tabs').innerHTML=[['w','🖼️','Words',c.w],['s','📝','Sentences',c.s],['d','💬','Talk',c.d],['t','📖','Stories',c.t]].map(t=>`<button class="${TAB===t[0]?'on':''}" data-tab="${t[0]}"><span class="e">${t[1]}</span>${t[2]} <span class="n">${t[3]}</span></button>`).join('')}
+function sideHTML(){const c=counts(SET),need={w:c.w>=2,s:c.s>0,d:c.d>0,t:c.t>0};
+ return`<div class="sc">
+ <a class="wsbig" href="worksheets.html?set=${SET.id}">🖨️ Make worksheets</a>
+ <div><h3>🖨️ Print as…</h3><div class="wst">${WT.map(t=>{const ok=need[t[2]];return`<a href="worksheets.html?set=${SET.id}&t=${t[0]}" class="${ok?'':'dim'}" title="${t[1]}${ok?'':' · needs '+{w:'2+ words',s:'sentences',d:'dialogues',t:'stories'}[t[2]]}"><span class="cd" style="background:${SKC[t[0][0]]}">${t[0]}</span><span class="nm2">${t[1]}</span>${ok?'':'<i class="dot"></i>'}</a>`}).join('')}</div><p class="hint" style="margin:6px 0 0"><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amber)"></i> = add sentences / talk / stories first (otherwise sample data is used)</p></div>
+ <div><h3>🌐 Languages</h3><div class="two"><div class="fld"><label>🔤 Learn</label><select data-f="lang">${LANGS.map(l=>`<option value="${l[0]}" ${SET.lang===l[0]?'selected':''}>${l[1]} ${l[2]}</option>`).join('')}</select></div><div class="fld"><label>🏠 Meaning</label><select data-f="mt">${LANGS.map(l=>`<option value="${l[0]}" ${SET.mt===l[0]?'selected':''}>${l[1]} ${l[2]}</option>`).join('')}</select></div></div></div>
+ <div><h3>📦 This set</h3><div class="rowb"><button class="ib" data-a="export">⬇️ <span class="lb">Export</span></button><button class="ib" data-a="dup">⧉ <span class="lb">Copy</span></button><button class="ib" data-a="delset" style="color:var(--red)">🗑 <span class="lb">Delete</span></button></div><p class="hint" style="margin:8px 0 0">Saved on this device automatically. Export makes a file you can share or move to another device (pictures included).</p></div>
+ </div>`}
+function renderSide(){$('side').innerHTML=sideHTML()}
+function renderTools(){const T=$('tools');
+ if(TAB==='w')T.innerHTML=`<button class="chip" data-a="fill">✨ Auto-fill IPA · meaning · picture</button><button class="chip" data-a="paste">📋 Paste list</button><button class="chip" data-a="pics">🖼️ Add pictures</button><button class="chip ai" data-a="aiwords">✨ AI word list</button><button class="chip ai" data-a="aipics">🎨 AI pictures</button>`;
+ else if(TAB==='s')T.innerHTML=`<button class="chip ai" data-a="aisen">✨ Make sentences from words</button><button class="chip" data-a="trsen">🌐 Fill missing meanings</button><button class="chip" data-a="ipasen">🔤 Get IPA for sentence words</button>`;
+ else if(TAB==='d')T.innerHTML=`<button class="chip ai" data-a="aidlg">✨ Make dialogues from words</button>`;
+ else T.innerHTML=`<button class="chip ai" data-a="aisto">✨ Make picture stories from words</button>`}
+function renderPane(){renderTools();$('addbar').hidden=TAB!=='w';const P=$('pane');
+ if(TAB==='w'){const mt=LG(SET.mt),ln=LG(SET.lang);
+  P.innerHTML=`<div class="dropzone">🖼️ Drop pictures here · file name = word (apple.png → apple)</div>
+  <div class="cntline"><b>${SET.words.length} words</b>${SET.words.length?`<span>· 🖼️ ${SET.words.filter(w=>w.img||w.e).length} with picture · /ə/ ${SET.words.filter(w=>w.ipa).length} with IPA · ${mt[1]} ${SET.words.filter(w=>w.m).length} with meaning</span>`:''}</div>
+  <div class="wh"><span>🖼️</span><span>${ln[1]} Word</span><span>/ə/ IPA</span><span>${mt[1]} Meaning</span><span></span></div>
+  <div class="wl" id="wl">${SET.words.map((w,i)=>rowHTML(w,i)).join('')}</div>
+  ${SET.words.length?'':`<div class="empty" style="margin-top:6px"><div class="big">🔤</div><p>Type a word below and press ＋.<br>Paste many lines at once, or <code>word | meaning</code>.</p><div class="row"><button class="ib" data-a="paste">📋 Paste list</button><button class="ib" data-a="aiwords">✨ AI word list</button></div></div>`}`}
+ else if(TAB==='s')P.innerHTML=txHTML('sen',`One sentence per line: <code>English sentence | meaning</code><br>For <b>R6 Fill the Blank</b>, put the blank word in brackets: <code>I like [apples]. | ฉันชอบแอปเปิล</code>`,`I like apples. | ฉันชอบแอปเปิล\nThe [mango] is sweet. | มะม่วงหวาน`)+`<div class="pv" id="pv"></div>`;
+ else if(TAB==='d')P.innerHTML=txHTML('dlg',`One dialogue per line: <code>Question | Answer</code>. Used by <b>S2 Talk Back</b> and <b>R4 Best Reply</b> (wrong choices come from the other answers).`,`What fruit do you like? | I like mangoes.\nIs the banana yellow? | Yes, it is.`)+`<div class="pv" id="pv"></div>`;
+ else P.innerHTML=txHTML('sto',`One block per story, a blank line between stories (used by <b>R7 Picture Story</b>):<br>1st line (optional) <code>[pic:kitchen]</code> <code>[pic:park]</code> or <code>[pic:rain]</code><br>then 1–3 story sentences, then questions:<br><code>Q: question | accepted answer / other answer | full-sentence model</code>`,`[pic:park]\nTom is at the park with his dog. The dog is running after a red ball.\nQ: Where is Tom? | at the park / park | Tom is at the park.\nQ: What colour is the ball? | red | The ball is red.`)+`<div class="pv" id="pv"></div>`;
+ if(TAB!=='w')renderPv()}
+function rowHTML(w,i){const mt=LG(SET.mt);return`<div class="wr" data-i="${i}"><button class="pk ${w.img||w.e?'has':''}" data-a="pic" title="Picture">${picHTML(w)}${w.ai?'<i class="ai">✨</i>':''}</button>
+ <div class="f"><input class="fi fw_" data-k="w" value="${esc(w.w)}" aria-label="Word" lang="${SET.lang}"><div class="f2"><label class="fx ipa ${w.ipa?'':'miss'}"><span>/</span><input class="fi" data-k="ipa" value="${esc(w.ipa)}" placeholder="IPA" aria-label="IPA"><span>/&nbsp;</span></label><label class="fx ${w.m?'':'miss'}"><span class="emo">${mt[1]}</span><input class="fi" data-k="m" value="${esc(w.m)}" placeholder="meaning" aria-label="Meaning" lang="${SET.mt}"></label></div></div>
+ <div class="acs"><button class="mini" data-a="say" title="Listen">🔊</button><button class="mini del" data-a="delw" title="Delete">🗑</button></div></div>`}
+function txHTML(k,help,ex){return`<div class="tx"><details class="fmt"><summary>ℹ️ How to write it</summary><p class="hint" style="margin:8px 0 0">${help}</p><pre>${esc(ex)}</pre></details><textarea id="ta" data-k="${k}" spellcheck="true" lang="${SET.lang}" placeholder="${esc(ex)}">${esc(SET[k])}</textarea></div>`}
+function hiWords(t){const ws=SET.words.map(w=>w.w.toLowerCase()).filter(Boolean);return esc(t).replace(/\[([^\]]+)\]/g,'<span class="bl">$1</span>').replace(/[A-Za-z'’-]+/g,m=>{const l=m.toLowerCase();return ws.some(w=>l===w||l===w+'s'||l===w+'es'||l.replace(/ies$/,'y')===w)?`<mark>${m}</mark>`:m})}
+function senIPA(en){return en.replace(/\[([^\]]+)\]/g,'$1').replace(/[.?!,"“”]/g,'').split(/\s+/).filter(Boolean).map(w=>{const l=w.toLowerCase().replace(/’/g,"'");const x=SET.words.find(v=>v.w.toLowerCase()===l);return (x&&x.ipa)||SET.ipa[l]||'…'}).join(' ')}
+function renderPv(){const pv=$('pv');if(!pv)return;
+ if(TAB==='s'){const L=VS.lines(SET.sen);pv.innerHTML=L.length?`<div class="cntline"><b>${L.length} sentences</b>${L.length>24?'<span class="badge warn">worksheets use the first 24</span>':''}${L.some(l=>!l.includes('|'))?`<span class="badge warn">${L.filter(l=>!l.includes('|')).length} without meaning</span>`:''}</div>`+L.map((l,i)=>{const [en,th]=l.split('|').map(x=>(x||'').trim());return`<div class="pvr"><span class="no">${i+1}</span><div><div class="en">${hiWords(en)}</div><div class="ip">/${esc(senIPA(en))}/</div></div><div class="th ${th?'':'miss'}">${th?esc(th):'— meaning?'}</div><button class="mini" data-say="${esc(en.replace(/[\[\]]/g,''))}">🔊</button></div>`}).join(''):''}
+ else if(TAB==='d'){const L=VS.lines(SET.dlg);pv.innerHTML=L.map((l,i)=>{const [q,a]=l.split('|').map(x=>(x||'').trim());return`<div class="pvr"><span class="no">${i+1}</span><div class="en">🅰️ ${hiWords(q)}</div><div class="en">${a?'🅱️ '+hiWords(a):'<span class="th miss">— answer?</span>'}</div><button class="mini" data-say="${esc(q+' '+(a||''))}">🔊</button></div>`}).join('')}
+ else{const B=String(SET.sto||'').split(/\n\s*\n/).filter(b=>b.trim());pv.innerHTML=B.map((b,i)=>{const ls=b.split('\n').map(l=>l.trim()).filter(Boolean);const pic=(ls.find(l=>/^\[pic:/i.test(l))||'').replace(/^\[pic:|\]$/gi,'');const st=ls.filter(l=>!/^\[pic:/i.test(l)&&!/^Q\s*\d*\s*[:.]/i.test(l)).join(' ');const qs=ls.filter(l=>/^Q\s*\d*\s*[:.]/i.test(l));return`<div class="story"><div class="cntline"><b>Story ${i+1}</b>${pic?`<span class="badge">🖼️ ${esc(pic)}</span>`:''}<span class="badge ${qs.length?'ok':'warn'}">❓ ${qs.length}</span></div><div class="st">${hiWords(st)}</div>${qs.map(q=>{const [qq,a,f]=q.replace(/^Q\s*\d*\s*[:.]\s*/i,'').split('|').map(x=>(x||'').trim());return`<div class="q"><b>Q</b> ${esc(qq)} <small>→ ${esc(a||'?')}${f?' · '+esc(f):''}</small></div>`}).join('')}</div>`}).join('')}}
+
+/* ---------- words ---------- */
+function parseLines(txt){return String(txt).split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>{let p=l.includes('|')?l.split('|'):l.includes('\t')?l.split('\t'):[l];p=p.map(x=>x.trim());return{w:p[0].replace(/^\d+[.)]\s*/,''),m:p[1]||'',ipa:(p[2]||'').replace(/^\/|\/$/g,'')}}).filter(x=>x.w)}
+function addWords(list,silent){const have=new Set(SET.words.map(w=>w.w.toLowerCase()));let n=0,skip=0;const first=SET.words.length;
+ list.forEach(x=>{const k=x.w.toLowerCase();if(have.has(k)){skip++;return}have.add(k);SET.words.push({id:VS.uid(),w:x.w,ipa:x.ipa||'',m:x.m||'',e:x.e||emoFor(x.w),img:x.img||''});n++});
+ if(SET.icon==='📚'&&SET.words[0]&&SET.words[0].e)SET.icon=SET.words[0].e;
+ save();renderEd();const rows=document.querySelectorAll('#wl .wr');for(let i=first;i<rows.length;i++)rows[i].classList.add('new');
+ if(rows[rows.length-1]&&n)rows[rows.length-1].scrollIntoView({block:'nearest',behavior:'smooth'});
+ if(!silent)toast(`＋ ${n} word${n===1?'':'s'}${skip?` · ${skip} already in the set`:''}`);
+ if(n&&!silent)autoFill(SET.words.slice(first),true);return n}
+let filling=false;
+async function autoFill(ws,quiet){if(filling)return;ws=ws||SET.words;const need=ws.filter(w=>!w.ipa||!w.m||!(w.img||w.e));if(!need.length){if(!quiet)toast('✅ Every word already has IPA, meaning and a picture');return}
+ filling=true;const sid=SET.id;let done=0;
+ try{
+  if(hasKey()){if(!quiet)toast('✨ Asking AI…',8000);
+   for(let s=0;s<need.length;s+=60){const part=need.slice(s,s+60);
+    const out=await gemJSON(`You help English teachers. For each ${LG(SET.lang)[2]} word below give: "ipa" (British IPA, no slashes, with stress marks and syllable dots like ˈæp.əl), "m" (short meaning in ${LG(SET.mt)[2]}, 1–3 words, the everyday sense), "e" (ONE emoji that best pictures it, or "" if none fits). Topic of the set: "${SET.name}". Return JSON array of {"w","ipa","m","e"} in the same order.\nWords:\n${part.map(w=>w.w).join('\n')}`);
+    (Array.isArray(out)?out:out.words||[]).forEach((o,i)=>{const w=part.find(x=>x.w.toLowerCase()===String(o.w||'').toLowerCase())||part[i];if(!w)return;if(!w.ipa&&o.ipa)w.ipa=String(o.ipa).replace(/^\/|\/$/g,'');if(!w.m&&o.m)w.m=o.m;if(!w.img&&!w.e&&o.e)w.e=o.e})}
+  }else{
+   if(!quiet)toast('🔎 Looking up IPA and meanings…',8000);
+   for(const w of need){if(SET?.id!==sid)break;if(!w.e&&!w.img)w.e=emoFor(w.w);
+    if(!w.ipa&&SET.lang==='en')w.ipa=await freeIPA(w.w);
+    if(!w.m&&SET.mt!==SET.lang)w.m=await freeTr(w.w,SET.lang,SET.mt);
+    done++;if(SET?.id===sid&&TAB==='w'&&!document.activeElement?.closest?.('.wr')){renderPane()}}
+  }
+  if(SET?.id===sid){save();if(!document.activeElement?.closest?.('.wr'))renderEd()}
+  const miss=need.filter(w=>!w.ipa||!w.m).length;toast(miss?`✅ Filled · ${miss} word${miss>1?'s':''} still need IPA or meaning (type them in)`:'✅ IPA, meaning and pictures filled');
+ }catch(e){toast('⚠️ '+esc(e.message),5000)}finally{filling=false}}
+
+/* picture from file names */
+async function addPicFiles(files){files=[...files].filter(f=>/^image\//.test(f.type));if(!files.length)return;let hit=0,add=0;
+ for(const f of files){const base=f.name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').replace(/^\d+\s*[.)-]?\s*/,'').trim();const d=await shrink(await fileToData(f));let w=SET.words.find(x=>x.w.toLowerCase()===base.toLowerCase());
+  if(w){w.img=d;w.ai=false;hit++}else if(base){SET.words.push({id:VS.uid(),w:base,ipa:'',m:'',e:'',img:d});add++}}
+ save();renderEd();toast(`🖼️ ${hit} matched${add?` · ＋ ${add} new words from file names`:''}`);if(add)autoFill(SET.words.slice(-add),true)}
+
+/* ---------- picture picker ---------- */
+function openPick(i){PICK=i;const w=SET.words[i];const sug=[...new Set([emoFor(w.w),...emoSearch(w.w.split(' ').pop()).map(x=>x[1])].filter(Boolean))];
+ sheet(`<span class="emo">🖼️</span> Picture`,`<div class="pp1"><div class="ppv" id="ppv">${w.img?`<img src="${w.img}" alt="">`:esc(w.e||'')}</div><div><div class="ppw">${esc(w.w)}</div><div class="hint">/${esc(w.ipa||'…')}/ · ${esc(w.m||'')}</div><button class="ib" data-a="say" style="margin-top:6px">🔊</button></div></div>
+ <div class="big3"><label><span class="e">📁</span>Upload<input type="file" accept="image/*" data-up hidden></label><label><span class="e">📷</span>Camera<input type="file" accept="image/*" capture="environment" data-up hidden></label><button data-a="pastepic"><span class="e">📋</span>Paste</button></div>
+ <div><h3 style="margin:0 0 6px;font-size:14px;color:var(--muted)">😀 Emoji</h3><div class="srch"><input id="eq" placeholder="search: cat, red, run…" value="${esc(w.w)}"><input id="ec" placeholder="or type 1 emoji" style="max-width:130px"></div><div class="pps" id="pps" style="margin-top:8px">${sug.map(e=>`<button data-emo="${esc(e)}" class="${w.e===e&&!w.img?'on':''}">${e}</button>`).join('')}</div></div>
+ <div class="aibox"><b>🎨 AI picture</b><div class="styles">${STY.map(s=>`<button class="chip ${CFG.sty===s[0]?'on':''}" data-sty="${s[0]}">${s[1]}</button>`).join('')}</div>${hasKey()?`<button class="ib pri" data-a="genone" id="gb">✨ Make picture</button>`:keyWarn()}</div>
+ ${w.img||w.e?`<button class="ib" data-a="nopic" style="color:var(--red)">🗑 Remove picture</button>`:''}`);
+ const eq=$('eq'),upd=()=>{const r=emoSearch(eq.value);const s2=[...new Set([...sug,...r.map(x=>x[1])])];$('pps').innerHTML=s2.map(e=>`<button data-emo="${esc(e)}">${e}</button>`).join('')||'<span class="hint">No match · upload or use AI</span>'};eq.oninput=()=>{const r=emoSearch(eq.value);$('pps').innerHTML=r.map(x=>`<button data-emo="${esc(x[1])}" title="${esc(x[0])}">${x[1]}</button>`).join('')||'<span class="hint">No match · upload or use AI</span>'};
+ $('ec').oninput=e=>{const v=e.target.value.trim();if(v){setPic({e:v})}};
+ $('shB').querySelectorAll('[data-up]').forEach(inp=>inp.onchange=async()=>{if(inp.files[0])setPic({img:await shrink(await fileToData(inp.files[0]))})})}
+function setPic(p){const w=SET.words[PICK];if(!w)return;if(p.img!==undefined){w.img=p.img;w.ai=!!p.ai}if(p.e!==undefined){w.e=p.e;if(!p.keepImg){w.img='';w.ai=false}}save();
+ const v=$('ppv');if(v)v.innerHTML=w.img?`<img src="${w.img}" alt="">`:esc(w.e||'');const row=document.querySelector(`.wr[data-i="${PICK}"] .pk`);if(row){row.innerHTML=picHTML(w)+(w.ai?'<i class="ai">✨</i>':'');row.classList.toggle('has',!!(w.img||w.e))}renderSide()}
+
+/* ---------- sheets ---------- */
+function sheet(title,body){$('shT').innerHTML=title;$('shB').innerHTML=body;$('sheet').classList.add('on');$('scrim').classList.add('on');$('shB').scrollTop=0}
+function closeSheet(){$('sheet').classList.remove('on');$('scrim').classList.remove('on');PICK=-1}
+function settingsSheet(){sheet('⚙️ Settings',`<div class="fld"><label>✨ Gemini API key (for AI words, sentences and pictures)</label><input id="sk" type="password" value="${esc(CFG.key)}" placeholder="AIza…" autocomplete="off"></div>
+ <p class="hint" style="margin:-4px 0 0">Get a free key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>. The key is kept only in this browser and is sent only to Google. Without a key: IPA comes from dictionaryapi.dev, meanings from MyMemory, pictures from emoji.</p>
+ <div class="two"><div class="fld"><label>Text model</label><input id="stm" value="${esc(CFG.tm)}"></div><div class="fld"><label>Picture model</label><input id="sim" value="${esc(CFG.im)}"></div></div>
+ <div class="two"><div class="fld"><label>🔤 New sets learn</label><select id="sl">${LANGS.map(l=>`<option value="${l[0]}" ${CFG.lang===l[0]?'selected':''}>${l[1]} ${l[2]}</option>`).join('')}</select></div><div class="fld"><label>🏠 New sets meaning</label><select id="smt">${LANGS.map(l=>`<option value="${l[0]}" ${CFG.mt===l[0]?'selected':''}>${l[1]} ${l[2]}</option>`).join('')}</select></div></div>
+ <div class="rowb"><button class="ib pri" data-a="savecfg">💾 Save</button><button class="ib" data-a="testkey">🧪 Test key</button></div>
+ <hr style="border:0;border-top:1px solid var(--line);width:100%">
+ <div class="rowb"><button class="ib" data-a="backup">⬇️ Back up all sets</button><button class="ib" data-a="import">⬆️ Import</button></div>
+ <p class="hint" style="margin:0">Import takes a set file (.json), a full backup, or an old <b>Bingo Maker</b> backup (.zip / .json): each Bingo game becomes one vocab set with its pictures and translations.</p>`)}
+function newSheet(){sheet('＋ New vocab set',`<div class="fld"><label>Name</label><input id="nn" placeholder="e.g. Fruits, My house, Unit 3" value=""></div>
+ <div class="newopt"><button data-a="mk" data-m="blank"><span class="e">✏️</span><span><b>Type words</b><small>Start empty, add words one by one</small></span></button>
+ <button data-a="mk" data-m="paste"><span class="e">📋</span><span><b>Paste a list</b><small>From Word, Excel or a book</small></span></button>
+ <button data-a="mk" data-m="ai"><span class="e">✨</span><span><b>AI makes the list</b><small>Tell it the topic and level</small></span></button>
+ <button data-a="mk" data-m="pics"><span class="e">🖼️</span><span><b>From pictures</b><small>File names become the words</small></span></button></div>`);setTimeout(()=>$('nn')?.focus(),250)}
+function pasteSheet(){sheet('📋 Paste a word list',`<p class="hint" style="margin:0">One word per line. You can add the meaning and IPA: <code>apple | แอปเปิล | ˈæp.əl</code>. Columns copied from Excel work too.</p><textarea id="pt" style="width:100%;min-height:220px;border:1px solid var(--line);border-radius:12px;padding:10px;font-family:var(--kid);font-size:16px" placeholder="apple\nbanana | กล้วย\ngrape"></textarea><button class="ib pri" data-a="dopaste">＋ Add words</button>`);setTimeout(()=>$('pt')?.focus(),250)}
+function aiWordsSheet(){sheet('✨ AI word list',`${hasKey()?'':keyWarn()}<div class="aibox"><textarea id="ap" placeholder="e.g. 15 easy fruit words for grade 2">${esc(SET.name&&SET.name!=='New set'?`15 words about ${SET.name} for young learners`:'')}</textarea><button class="ib pri" data-a="doaiwords" ${hasKey()?'':'disabled'}>✨ Make words</button></div><p class="hint" style="margin:0">AI adds IPA, meaning and an emoji for each word. You can edit everything after.</p>`)}
+function iconSheet(){const opts=[...new Set([...SET.words.map(w=>w.e).filter(Boolean),'📚','🍎','🐶','🏠','🏫','🚗','👕','🍔','⚽','🌦️','👪','🧑‍⚕️','🎨','🎵','🌳','🐟','🚀','🎃','🎄','❤️','🔢','🌈','🕐','🗺️'])];sheet('Set picture',`<div class="iconpick">${opts.map(e=>`<button data-ico="${esc(e)}" class="${SET.icon===e?'on':''}">${e}</button>`).join('')}</div><div class="srch"><input id="ic" placeholder="or type 1 emoji"><button class="ib" data-a="seticon">OK</button></div>`)}
+
+/* ---------- AI text helpers ---------- */
+const wordList=()=>SET.words.map(w=>w.w).join(', ');
+async function aiText(kind,btn){if(!hasKey()){settingsSheet();toast('Add a Gemini key first');return}if(!SET.words.length){toast('Add some words first');return}
+ const old=btn.innerHTML;btn.disabled=true;btn.innerHTML='⏳ Making…';const mt=LG(SET.mt)[2],ln=LG(SET.lang)[2];
+ const P={sen:`Write 10 short, easy ${ln} sentences for young learners using these words (one word per sentence, each word used at least once if possible): ${wordList()}.\nFormat EXACTLY one per line: sentence | ${mt} translation\nPut the vocabulary word of each sentence in square brackets, e.g. I like [apples]. | ...\nNo numbering, no extra text.`,
+  dlg:`Write 10 short question-and-answer pairs (A asks, B answers) for young ${ln} learners, about: ${SET.name}; use these words: ${wordList()}.\nFormat EXACTLY one per line: Question? | Answer.\nEach answer must clearly fit only its own question. No numbering, no extra text.`,
+  sto:`Write 3 very short picture stories for young ${ln} learners using some of these words: ${wordList()}.\nEach story: 2–3 simple sentences, then 3 questions (who/what/where/yes-no).\nFormat EXACTLY:\n[pic:park]\nStory sentences on one line.\nQ: question? | accepted short answer / another accepted answer | full-sentence model answer.\n(blank line between stories). Use [pic:kitchen], [pic:park] or [pic:rain] to pick the closest scene. No extra text.`};
+ try{const t=await gemText(P[kind]);const add=t.split('\n').map(l=>l.replace(/^\s*[-*\d.)]+\s+(?=\S)/,(m)=>/^\s*\d+[.)]\s+/.test(m)?'':m)).join('\n').trim();
+  SET[kind]=(SET[kind]?SET[kind].replace(/\s+$/,'')+(kind==='sto'?'\n\n':'\n'):'')+add;save(true);renderEd();toast('✨ Added');if(kind==='sen')fetchSenIPA(true)}
+ catch(e){toast('⚠️ '+esc(e.message),5000)}finally{btn.disabled=false;btn.innerHTML=old}}
+async function trSen(btn){const L=SET.sen.split('\n');const miss=L.map((l,i)=>[l,i]).filter(([l])=>l.trim()&&!l.includes('|'));if(!miss.length){toast('✅ Every sentence has a meaning');return}
+ btn.disabled=true;const old=btn.innerHTML;btn.innerHTML='⏳';
+ try{if(hasKey()){const out=await gemJSON(`Translate each ${LG(SET.lang)[2]} sentence into natural, simple ${LG(SET.mt)[2]}. Return a JSON array of strings, same order.\n${miss.map(x=>x[0].replace(/[\[\]]/g,'')).join('\n')}`);miss.forEach(([l,i],k)=>{if(out[k])L[i]=l.trim()+' | '+out[k]})}
+  else for(const [l,i] of miss){const t=await freeTr(l.replace(/[\[\]]/g,'').trim(),SET.lang,SET.mt);if(t)L[i]=l.trim()+' | '+t}
+  SET.sen=L.join('\n');save(true);renderEd();toast('🌐 Meanings added')}catch(e){toast('⚠️ '+esc(e.message))}finally{btn.disabled=false;btn.innerHTML=old}}
+let ipaBusy=false;
+async function fetchSenIPA(quiet){if(ipaBusy||SET.lang!=='en')return;const known=new Set(SET.words.map(w=>w.w.toLowerCase()));const ws=[...new Set(VS.lines(SET.sen).concat(VS.lines(SET.dlg)).flatMap(l=>l.split('|')[0].replace(/[\[\].?!,"“”;:]/g,'').toLowerCase().replace(/’/g,"'").split(/\s+/)).filter(w=>w&&!known.has(w)&&!SET.ipa[w]))];
+ if(!ws.length){if(!quiet)toast('✅ All sentence words have IPA');return}ipaBusy=true;const sid=SET.id;
+ try{if(hasKey()){const out=await gemJSON(`Give British IPA (no slashes, stress marks, syllable dots) for each English word. Return a JSON object word→ipa.\n${ws.join('\n')}`);Object.entries(out||{}).forEach(([k,v])=>{if(v)SET.ipa[k.toLowerCase()]=String(v).replace(/^\/|\/$/g,'')})}
+  else for(const w of ws.slice(0,80)){if(SET?.id!==sid)break;const ip=await freeIPA(w);if(ip)SET.ipa[w]=ip}
+  if(SET?.id===sid){save();if(TAB==='s')renderPv()}if(!quiet)toast('🔤 IPA added for sentence words')}catch(e){if(!quiet)toast('⚠️ '+esc(e.message))}finally{ipaBusy=false}}
+async function aiPics(btn){if(!hasKey()){settingsSheet();toast('Add a Gemini key first');return}const need=SET.words.filter(w=>!w.img);if(!need.length){toast('✅ Every word has a picture');return}
+ const old=btn.innerHTML;btn.disabled=true;let d=0;btn.innerHTML=`⏳ 0/${need.length}`;const sid=SET.id;
+ for(const w of need){if(SET?.id!==sid)break;try{w.img=await gemImage(w.w,CFG.sty);w.ai=true;save()}catch(e){toast('⚠️ '+esc(e.message),4000);break}d++;btn.innerHTML=`⏳ ${d}/${need.length}`;const r=document.querySelector(`.wr[data-i="${SET.words.indexOf(w)}"] .pk`);if(r){r.innerHTML=picHTML(w)+'<i class="ai">✨</i>';r.classList.add('has')}}
+ btn.disabled=false;btn.innerHTML=old;toast(`🎨 ${d} pictures made`)}
+
+/* ---------- import / export ---------- */
+function dl(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+const fname=s=>String(s).replace(/[\\/:*?"<>|]+/g,'_').trim().slice(0,40)||'set';
+function exportSet(s){dl(new Blob([JSON.stringify({format:VS.FORMAT,v:1,set:s})],{type:'application/json'}),fname(s.name)+'.vocab.json')}
+async function backupAll(){const all=await VS.all();if(!all.length){toast('No sets yet');return}dl(new Blob([JSON.stringify({format:VS.FORMAT,v:1,sets:all})],{type:'application/json'}),'bokogo-vocab-sets-'+new Date().toISOString().slice(0,10)+'.json')}
+async function inflate(raw){const ds=new DecompressionStream('deflate-raw'),w=ds.writable.getWriter();w.write(raw);w.close();return new Uint8Array(await new Response(ds.readable).arrayBuffer())}
+async function unzip(buf){const u=new Uint8Array(buf),dv=new DataView(buf),dec=new TextDecoder();let e=u.length-22;while(e>=0&&dv.getUint32(e,true)!==0x06054b50)e--;if(e<0)throw new Error('Not a ZIP file');
+ const n=dv.getUint16(e+10,true),out={};let p=dv.getUint32(e+16,true);
+ for(let i=0;i<n;i++){if(dv.getUint32(p,true)!==0x02014b50)break;const meth=dv.getUint16(p+10,true),csz=dv.getUint32(p+20,true),nl=dv.getUint16(p+28,true),xl=dv.getUint16(p+30,true),cl=dv.getUint16(p+32,true),lo=dv.getUint32(p+42,true),name=dec.decode(u.subarray(p+46,p+46+nl));p+=46+nl+xl+cl;if(name.endsWith('/'))continue;const ds=lo+30+dv.getUint16(lo+26,true)+dv.getUint16(lo+28,true),raw=u.subarray(ds,ds+csz);out[name]=meth===0?raw:await inflate(raw)}return out}
+const mime=e=>({png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',webp:'image/webp',gif:'image/gif',svg:'image/svg+xml'}[e]||'image/png');
+const u8url=(u,p)=>{let s='';for(let i=0;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return'data:'+mime(p.split('.').pop().toLowerCase())+';base64,'+btoa(s)};
+/* old Bingo Maker project → vocab set */
+async function fromBingo(d,files){const ol=d.ol||'en',learn=CFG.lang||'en',mt=CFG.mt||'th';const s=VS.blank(d.name||'Bingo');s.lang=learn;s.mt=mt;s.from='bingo:'+d.id;
+ for(const it of d.items||[]){const o=it.o??it.w??'';const t=it.t||{};const w=ol===learn?o:(t[learn]||o);const m=ol===mt?o:(t[mt]||'');let img=it.el;
+  if(img&&typeof img==='string'&&!img.startsWith('data:')){img=files&&files[img]?u8url(files[img],img):''}
+  if(img&&img.startsWith('data:'))img=await shrink(img);else img='';
+  if(w)s.words.push({id:VS.uid(),w:String(w).trim(),ipa:'',m:m,e:it.e||(img?'':emoFor(w)),img})}
+ s.icon=(s.words.find(w=>w.e)||{}).e||'🎲';return s}
+async function importFiles(fl){let added=0;
+ for(const f of fl){try{let o,files=null;
+  if(/\.zip$/i.test(f.name)||/zip/.test(f.type||'')){files=await unzip(await f.arrayBuffer());const bj=files['backup.json'];if(!bj)throw new Error('backup.json not found in the ZIP');o=JSON.parse(new TextDecoder().decode(bj))}
+  else o=JSON.parse(await f.text());
+  let list=[];
+  if(o.format===VS.FORMAT){list=o.sets||[o.set]}
+  else if(o.app==='learn8-bingo'||Array.isArray(o.projects)||(Array.isArray(o)&&o[0]&&o[0].items)){const pr=o.projects||o;toast(`🎲 Converting ${pr.length} Bingo games…`,6000);for(const d of pr)if(d&&Array.isArray(d.items))list.push(await fromBingo(d,files))}
+  else if(o.words&&o.name)list=[o];
+  else throw new Error('Unknown file');
+  const have=await VS.all();
+  for(const s of list){if(!s)continue;const same=have.find(x=>x.id===s.id||(s.from&&x.from===s.from));if(same&&(same.updated||0)>=(s.updated||0)&&!s.from)continue;if(same&&s.from)s.id=same.id;if(!s.id)s.id=VS.uid();s.updated=0;await VS.put(s);added++}
+ }catch(e){toast('⚠️ '+esc(f.name)+': '+esc(e.message),5000)}}
+ if(added){toast(`⬆️ ${added} set${added>1?'s':''} imported`);closeSheet();await showLib()}}
+
+/* ---------- sample ---------- */
+function sample(){const s=VS.blank('Fruits');s.icon='🍎';
+ s.words=[['apple','ˈæp.əl','แอปเปิล'],['banana','bəˈnɑː.nə','กล้วย'],['grape','ɡreɪp','องุ่น'],['orange','ˈɒr.ɪndʒ','ส้ม'],['mango','ˈmæŋ.ɡəʊ','มะม่วง'],['lemon','ˈlem.ən','มะนาว'],['cherry','ˈtʃer.i','เชอร์รี่'],['pear','peər','ลูกแพร์'],['peach','piːtʃ','ลูกพีช'],['watermelon','ˈwɔː.təˌmel.ən','แตงโม'],['coconut','ˈkəʊ.kə.nʌt','มะพร้าว'],['pineapple','ˈpaɪn.æp.əl','สับปะรด'],['strawberry','ˈstrɔː.bər.i','สตรอว์เบอร์รี'],['kiwi','ˈkiː.wiː','กีวี']].map(([w,ipa,m])=>({id:VS.uid(),w,ipa,m,e:emoFor(w),img:''}));
+ s.sen=`I like [apples]. | ฉันชอบแอปเปิล\nShe eats a [banana]. | เธอกินกล้วยหนึ่งลูก\nThe [mango] is sweet. | มะม่วงหวาน\nWe buy [grapes] at the market. | เราซื้อองุ่นที่ตลาด\nDo you want an [orange]? | คุณอยากได้ส้มไหม\nThe [lemon] is sour. | มะนาวเปรี้ยว\nA [watermelon] is big and green. | แตงโมใหญ่และสีเขียว\nI drink [coconut] water. | ฉันดื่มน้ำมะพร้าว`;
+ s.dlg=`What fruit do you like? | I like mangoes.\nHow many apples do you want? | Three, please.\nIs the banana yellow? | Yes, it is.\nCan I have a pear? | Sure, here you are.\nWhere do you buy fruit? | At the market.\nDo you like lemons? | No, they are sour.`;
+ s.sto=`[pic:park]\nTom is at the park with his dog. Tom is eating an apple.\nQ: Where is Tom? | at the park / park | Tom is at the park.\nQ: What is Tom eating? | an apple / apple | He is eating an apple.\nQ: Is Tom with his cat? | No | No, he isn't. He is with his dog.`;
+ s.ipa={i:'aɪ',like:'laɪk',apples:'ˈæp.əlz',she:'ʃiː',eats:'iːts',a:'ə',the:'ðə',is:'ɪz',sweet:'swiːt',we:'wiː',buy:'baɪ',grapes:'ɡreɪps',at:'æt',market:'ˈmɑː.kɪt',do:'duː',you:'juː',want:'wɒnt',an:'ən',sour:'ˈsaʊ.ər',big:'bɪɡ',and:'ænd',green:'ɡriːn',drink:'drɪŋk',water:'ˈwɔː.tər'};return s}
+
+/* ---------- events ---------- */
+document.addEventListener('click',async e=>{const t=e.target;
+ const op=t.closest('[data-open]');if(op&&!t.closest('a')){openSet(op.dataset.open);return}
+ const cur=t.closest('[data-cur]');if(cur){VS.cur.set(cur.dataset.cur);return}
+ const tb=t.closest('[data-tab]');if(tb){TAB=tb.dataset.tab;renderTabs();renderPane();return}
+ const sy=t.closest('[data-say]');if(sy){speak(sy.dataset.say);return}
+ const em=t.closest('[data-emo]');if(em){setPic({e:em.dataset.emo});document.querySelectorAll('#pps button').forEach(b=>b.classList.toggle('on',b===em));return}
+ const ic=t.closest('[data-ico]');if(ic){SET.icon=ic.dataset.ico;save();renderEd();closeSheet();return}
+ const sty=t.closest('[data-sty]');if(sty){CFG.sty=sty.dataset.sty;saveCfg();sty.parentNode.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',c===sty));return}
+ const b=t.closest('[data-a]');if(!b)return;const a=b.dataset.a;const row=b.closest('.wr');const i=row?+row.dataset.i:-1;
+ switch(a){
+  case 'close':closeSheet();break;
+  case 'home':closeSheet();showLib();break;
+  case 'new':newSheet();break;
+  case 'demo':{const s=sample();await VS.put(s);openSet(s.id);break}
+  case 'mk':{const s=VS.blank(($('nn').value||'').trim()||'New set');s.lang=CFG.lang;s.mt=CFG.mt;await VS.put(s);closeSheet();await openSet(s.id);TAB='w';renderEd();const m=b.dataset.m;
+   if(m==='paste')pasteSheet();else if(m==='ai')aiWordsSheet();else if(m==='pics')$('fImgs').click();else setTimeout(()=>$('addw').focus(),100);break}
+  case 'settings':settingsSheet();break;
+  case 'savecfg':CFG.key=$('sk').value.trim();CFG.tm=$('stm').value.trim()||CFG.tm;CFG.im=$('sim').value.trim()||CFG.im;CFG.lang=$('sl').value;CFG.mt=$('smt').value;saveCfg();toast('💾 Saved');closeSheet();if(SET)renderPane();break;
+  case 'testkey':{CFG.key=$('sk').value.trim();CFG.tm=$('stm').value.trim()||CFG.tm;saveCfg();b.disabled=true;b.textContent='⏳';try{const r=await gemText('Reply with the single word: OK');toast('✅ Key works · '+esc(r.slice(0,20)))}catch(er){toast('⚠️ '+esc(er.message),5000)}b.disabled=false;b.textContent='🧪 Test key';break}
+  case 'import':$('fImp').click();break;
+  case 'backup':backupAll();break;
+  case 'more':sheet(`<span class="emo">${esc(SET.icon)}</span> ${esc(SET.name)}`,sideHTML());break;
+  case 'icon':iconSheet();break;
+  case 'seticon':{const v=$('ic').value.trim();if(v){SET.icon=v;save();renderEd()}closeSheet();break}
+  case 'export':exportSet(SET);break;
+  case 'dup':{const s=JSON.parse(JSON.stringify(SET));s.id=VS.uid();s.name=SET.name+' (copy)';delete s.created;delete s.from;await VS.put(s);closeSheet();openSet(s.id);toast('⧉ Copied');break}
+  case 'delset':if(confirm(`Delete "${SET.name}"? This cannot be undone.`)){await VS.del(SET.id);closeSheet();showLib();toast('🗑 Deleted')}break;
+  case 'pic':openPick(i);break;
+  case 'say':{const w=row?SET.words[i]:SET.words[PICK];if(w)speak(w.w);break}
+  case 'delw':{const w=SET.words[i];SET.words.splice(i,1);save();renderEd();toast(`🗑 ${esc(w.w)} · <button style="background:none;border:0;color:#5eead4;font-weight:800" data-a="undo">Undo</button>`,5000);window._undo=[i,w];break}
+  case 'undo':if(window._undo){SET.words.splice(window._undo[0],0,window._undo[1]);window._undo=null;save();renderEd()}break;
+  case 'fill':autoFill(null,false);break;
+  case 'paste':pasteSheet();break;
+  case 'dopaste':{const l=parseLines($('pt').value);closeSheet();addWords(l);break}
+  case 'pics':$('fImgs').click();break;
+  case 'aiwords':aiWordsSheet();break;
+  case 'doaiwords':{const pr=$('ap').value.trim();if(!pr)return;b.disabled=true;b.textContent='⏳ Making…';
+   try{const out=await gemJSON(`Make a vocabulary list for English teachers. Request: "${pr}". Learning language: ${LG(SET.lang)[2]}. For each word give "w" (the word, lowercase unless a proper noun), "ipa" (British IPA, no slashes, stress marks and syllable dots), "m" (meaning in ${LG(SET.mt)[2]}, 1–3 words), "e" (ONE emoji that pictures it, or ""). Concrete, picturable words first. Return a JSON array of {"w","ipa","m","e"}.`);
+    const l=(Array.isArray(out)?out:out.words||[]).map(o=>({w:String(o.w||'').trim(),ipa:String(o.ipa||'').replace(/^\/|\/$/g,''),m:o.m||'',e:o.e||''})).filter(x=>x.w);closeSheet();addWords(l,true);toast(`✨ ${l.length} words added`)}
+   catch(er){toast('⚠️ '+esc(er.message),5000);b.disabled=false;b.textContent='✨ Make words'}break}
+  case 'aipics':aiPics(b);break;
+  case 'genone':{const w=SET.words[PICK];b.disabled=true;b.textContent='⏳ Drawing…';try{setPic({img:await gemImage(w.w,CFG.sty),ai:true})}catch(er){toast('⚠️ '+esc(er.message),5000)}b.disabled=false;b.textContent='✨ Make picture';break}
+  case 'nopic':setPic({e:'',img:''});closeSheet();break;
+  case 'pastepic':try{const it=await navigator.clipboard.read();for(const c of it){const ty=c.types.find(x=>x.startsWith('image/'));if(ty){const bl=await c.getType(ty);setPic({img:await shrink(await fileToData(bl))});return}}toast('No picture in the clipboard')}catch(er){toast('Copy a picture first, then press 📋 (or use Upload)')}break;
+  case 'aisen':aiText('sen',b);break;case 'aidlg':aiText('dlg',b);break;case 'aisto':aiText('sto',b);break;
+  case 'trsen':trSen(b);break;
+  case 'ipasen':fetchSenIPA(false);break;
+ }});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet();if((e.key==='Enter'||e.key===' ')&&e.target.classList?.contains('vcard')){e.preventDefault();openSet(e.target.dataset.open)}});
+document.addEventListener('input',e=>{const t=e.target;if(!SET)return;
+ if(t.id==='edName'){SET.name=t.value;save();document.title=SET.name+' · Vocab Sets';return}
+ const row=t.closest('.wr');if(row&&t.dataset.k){const w=SET.words[+row.dataset.i];w[t.dataset.k]=t.dataset.k==='ipa'?t.value.replace(/\//g,''):t.value;if(t.dataset.k!=='w')t.closest('.fx')?.classList.toggle('miss',!t.value);save();return}
+ if(t.id==='ta'){SET[t.dataset.k]=t.value;save();clearTimeout(window._pvT);window._pvT=setTimeout(()=>{renderPv();renderTabs();renderSide()},250);return}});
+document.addEventListener('change',e=>{const t=e.target;if(!SET)return;
+ if(t.dataset.f){SET[t.dataset.f]=t.value;save();renderEd();if($('sheet').classList.contains('on')&&$('shB').querySelector('[data-f]'))$('shB').innerHTML=sideHTML();return}
+ const row=t.closest('.wr');if(row&&t.dataset.k==='w'){const w=SET.words[+row.dataset.i];if(!w.img&&(!w.e||w.e===emoFor(w._old||'')))w.e=emoFor(w.w)||w.e;if(w.w&&(!w.ipa||!w.m))autoFill([w],true);renderPane()}
+ if(t.id==='ta'&&t.dataset.k==='sen')fetchSenIPA(true)});
+document.addEventListener('focusin',e=>{const t=e.target;if(SET&&t.dataset?.k==='w'){const r=t.closest('.wr');if(r)SET.words[+r.dataset.i]._old=t.value}});
+$('addf').onsubmit=e=>{e.preventDefault();const v=$('addw').value;if(!v.trim())return;addWords(parseLines(v));$('addw').value='';$('addw').focus()};
+$('addw').addEventListener('paste',e=>{const t=(e.clipboardData||window.clipboardData).getData('text');if(t&&/\n/.test(t.trim())){e.preventDefault();addWords(parseLines(t))}});
+$('fImgs').onchange=e=>{if(SET)addPicFiles(e.target.files);e.target.value=''};
+$('fImp').onchange=e=>{importFiles([...e.target.files]);e.target.value=''};
+/* drag pictures onto the editor: onto one tile = that word, anywhere else = match by file name */
+let dragN=0;
+document.addEventListener('dragenter',e=>{if(SET&&TAB==='w'&&[...(e.dataTransfer?.types||[])].includes('Files')){dragN++;document.body.classList.add('dragging')}});
+document.addEventListener('dragleave',()=>{if(--dragN<=0){dragN=0;document.body.classList.remove('dragging')}});
+document.addEventListener('dragover',e=>{if(SET&&[...(e.dataTransfer?.types||[])].includes('Files')){e.preventDefault();const pk=e.target.closest?.('.pk');document.querySelectorAll('.pk.ov').forEach(x=>x!==pk&&x.classList.remove('ov'));if(pk)pk.classList.add('ov')}});
+document.addEventListener('drop',async e=>{dragN=0;document.body.classList.remove('dragging');if(!SET||!e.dataTransfer?.files?.length)return;e.preventDefault();const pk=e.target.closest?.('.pk');document.querySelectorAll('.pk.ov').forEach(x=>x.classList.remove('ov'));
+ if(pk&&e.dataTransfer.files.length===1){PICK=+pk.closest('.wr').dataset.i;setPic({img:await shrink(await fileToData(e.dataTransfer.files[0]))});PICK=-1;return}
+ if(/\.(json|zip)$/i.test(e.dataTransfer.files[0].name))return importFiles([...e.dataTransfer.files]);addPicFiles(e.dataTransfer.files)});
+document.addEventListener('paste',async e=>{if(PICK<0)return;const f=[...(e.clipboardData?.files||[])].find(f=>/^image\//.test(f.type));if(f){e.preventDefault();setPic({img:await shrink(await fileToData(f))})}});
+
+/* ---------- start ---------- */
+(async()=>{const q=new URLSearchParams(location.search);try{if(q.get('set'))await openSet(q.get('set'));else await showLib();if(q.get('new'))newSheet()}catch(e){document.body.insertAdjacentHTML('afterbegin',`<p style="padding:16px;color:#b00">⚠️ This browser blocked local storage (${esc(e.message)}). Try a normal (not private) window.</p>`)}})();
+window.addEventListener('pagehide',()=>{if(SET)save(true)});
+})();
+</script>
+</body>
+</html>
