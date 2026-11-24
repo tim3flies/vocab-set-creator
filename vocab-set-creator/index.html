@@ -292,6 +292,7 @@ body.dragging .dropzone{display:block}
 
 <script src="store.js"></script>
 <script src="emoji.js"></script>
+<script src="cutter.js"></script>
 <script>
 (()=>{
 const $=id=>document.getElementById(id);
@@ -358,7 +359,7 @@ function sideHTML(){const c=counts(SET),need={w:c.w>=2,s:c.s>0,d:c.d>0,t:c.t>0};
  </div>`}
 function renderSide(){$('side').innerHTML=sideHTML()}
 function renderTools(){const T=$('tools');
- if(TAB==='w')T.innerHTML=`<button class="chip" data-a="fill">✨ Auto-fill IPA · meaning · picture</button><button class="chip" data-a="paste">📋 Paste list</button><button class="chip" data-a="pics">🖼️ Add pictures</button><button class="chip ai" data-a="aiwords">✨ AI word list</button><button class="chip ai" data-a="aipics">🎨 AI pictures</button>`;
+ if(TAB==='w')T.innerHTML=`<button class="chip" data-a="fill">✨ Auto-fill IPA · meaning · picture</button><button class="chip" data-a="paste">📋 Paste list</button><button class="chip" data-a="pics">🖼️ Add pictures</button><button class="chip" data-a="cutsheet">🧩 Cut picture sheet</button><button class="chip ai" data-a="aiwords">✨ AI word list</button><button class="chip ai" data-a="aipics">🎨 AI pictures</button>`;
  else if(TAB==='s')T.innerHTML=`<button class="chip ai" data-a="aisen">✨ Make sentences from words</button><button class="chip" data-a="trsen">🌐 Fill missing meanings</button><button class="chip" data-a="ipasen">🔤 Get IPA for sentence words</button>`;
  else if(TAB==='d')T.innerHTML=`<button class="chip ai" data-a="aidlg">✨ Make dialogues from words</button>`;
  else T.innerHTML=`<button class="chip ai" data-a="aisto">✨ Make picture stories from words</button>`}
@@ -418,6 +419,14 @@ async function addPicFiles(files){files=[...files].filter(f=>/^image\//.test(f.t
   if(w){w.img=d;w.ai=false;hit++}else if(base){SET.words.push({id:VS.uid(),w:base,ipa:'',m:'',e:'',img:d});add++}}
  save();renderEd();toast(`🖼️ ${hit} matched${add?` · ＋ ${add} new words from file names`:''}`);if(add)autoFill(SET.words.slice(-add),true)}
 
+/* clipart sheet cutter (cutter.js) → pictures into this set */
+window.CUT=Object.assign(window.CUT||{},{words:()=>SET?SET.words.map(w=>w.w):[],
+ apply(list,o){if(!SET)return null;let n=0,a=0,sk=0;const fresh=[];
+  for(const x of list){const k=bnorm(x.name);const w=x.exists?SET.words.find(y=>bnorm(y.w)===k):null;
+   if(w){if(w.img&&!o.rep){sk++;continue}w.img=x.img;w.ai=false;n++}
+   else if(o.add&&x.name){const nw={id:VS.uid(),w:x.name,ipa:'',m:'',e:'',img:x.img};SET.words.push(nw);fresh.push(nw);a++}}
+  save();TAB='w';renderEd();if(fresh.length)autoFill(fresh,true);return{n,a,sk}}});
+
 /* ---------- picture picker ---------- */
 function openPick(i){PICK=i;const w=SET.words[i];const sug=[...new Set([emoFor(w.w),...emoSearch(w.w.split(' ').pop()).map(x=>x[1])].filter(Boolean))];
  sheet(`<span class="emo">🖼️</span> Picture`,`<div class="pp1"><div class="ppv" id="ppv">${w.img?`<img src="${w.img}" alt="">`:esc(w.e||'')}</div><div><div class="ppw">${esc(w.w)}</div><div class="hint">/${esc(w.ipa||'…')}/ · ${esc(w.m||'')}</div><button class="ib" data-a="say" style="margin-top:6px">🔊</button></div></div>
@@ -446,7 +455,7 @@ function newSheet(){sheet('＋ New vocab set',`<div class="fld"><label>Name</lab
  <div class="newopt"><button data-a="mk" data-m="blank"><span class="e">✏️</span><span><b>Type words</b><small>Start empty, add words one by one</small></span></button>
  <button data-a="mk" data-m="paste"><span class="e">📋</span><span><b>Paste a list</b><small>From Word, Excel or a book</small></span></button>
  <button data-a="mk" data-m="ai"><span class="e">✨</span><span><b>AI makes the list</b><small>Tell it the topic and level</small></span></button>
- <button data-a="mk" data-m="pics"><span class="e">🖼️</span><span><b>From pictures</b><small>File names become the words</small></span></button></div>`);setTimeout(()=>$('nn')?.focus(),250)}
+ <button data-a="mk" data-m="pics"><span class="e">🖼️</span><span><b>From pictures</b><small>File names become the words</small></span></button><button data-a="mk" data-m="cut"><span class="e">🧩</span><span><b>From a picture sheet</b><small>One picture with many cliparts · cut, clean, read the words</small></span></button></div>`);setTimeout(()=>$('nn')?.focus(),250)}
 function pasteSheet(){sheet('📋 Paste a word list',`<p class="hint" style="margin:0">One word per line. You can add the meaning and IPA: <code>apple | แอปเปิล | ˈæp.əl</code>. Columns copied from Excel work too.</p><textarea id="pt" style="width:100%;min-height:220px;border:1px solid var(--line);border-radius:12px;padding:10px;font-family:var(--kid);font-size:16px" placeholder="apple\nbanana | กล้วย\ngrape"></textarea><button class="ib pri" data-a="dopaste">＋ Add words</button>`);setTimeout(()=>$('pt')?.focus(),250)}
 function aiWordsSheet(){sheet('✨ AI word list',`${hasKey()?'':keyWarn()}<div class="aibox"><textarea id="ap" placeholder="e.g. 15 easy fruit words for grade 2">${esc(SET.name&&SET.name!=='New set'?`15 words about ${SET.name} for young learners`:'')}</textarea><button class="ib pri" data-a="doaiwords" ${hasKey()?'':'disabled'}>✨ Make words</button></div><p class="hint" style="margin:0">AI adds IPA, meaning and an emoji for each word. You can edit everything after.</p>`)}
 function iconSheet(){const opts=[...new Set([...SET.words.map(w=>w.e).filter(Boolean),'📚','🍎','🐶','🏠','🏫','🚗','👕','🍔','⚽','🌦️','👪','🧑‍⚕️','🎨','🎵','🌳','🐟','🚀','🎃','🎄','❤️','🔢','🌈','🕐','🗺️'])];sheet('Set picture',`<div class="iconpick">${opts.map(e=>`<button data-ico="${esc(e)}" class="${SET.icon===e?'on':''}">${e}</button>`).join('')}</div><div class="srch"><input id="ic" placeholder="or type 1 emoji"><button class="ib" data-a="seticon">OK</button></div>`)}
@@ -533,7 +542,7 @@ document.addEventListener('click',async e=>{const t=e.target;
   case 'new':newSheet();break;
   case 'demo':{const s=sample();await VS.put(s);openSet(s.id);break}
   case 'mk':{const s=VS.blank(($('nn').value||'').trim()||'New set');s.lang=CFG.lang;s.mt=CFG.mt;await VS.put(s);closeSheet();await openSet(s.id);TAB='w';renderEd();const m=b.dataset.m;
-   if(m==='paste')pasteSheet();else if(m==='ai')aiWordsSheet();else if(m==='pics')$('fImgs').click();else setTimeout(()=>$('addw').focus(),100);break}
+   if(m==='paste')pasteSheet();else if(m==='ai')aiWordsSheet();else if(m==='pics')$('fImgs').click();else if(m==='cut')CUT.pick();else setTimeout(()=>$('addw').focus(),100);break}
   case 'settings':settingsSheet();break;
   case 'savecfg':CFG.key=$('sk').value.trim();CFG.tm=$('stm').value.trim()||CFG.tm;CFG.im=$('sim').value.trim()||CFG.im;CFG.lang=$('sl').value;CFG.mt=$('smt').value;saveCfg();toast('💾 Saved');closeSheet();if(SET)renderPane();break;
   case 'testkey':{CFG.key=$('sk').value.trim();CFG.tm=$('stm').value.trim()||CFG.tm;saveCfg();b.disabled=true;b.textContent='⏳';try{const r=await gemText('Reply with the single word: OK');toast('✅ Key works · '+esc(r.slice(0,20)))}catch(er){toast('⚠️ '+esc(er.message),5000)}b.disabled=false;b.textContent='🧪 Test key';break}
@@ -553,6 +562,7 @@ document.addEventListener('click',async e=>{const t=e.target;
   case 'paste':pasteSheet();break;
   case 'dopaste':{const l=parseLines($('pt').value);closeSheet();addWords(l);break}
   case 'pics':$('fImgs').click();break;
+  case 'cutsheet':CUT.pick();break;
   case 'aiwords':aiWordsSheet();break;
   case 'doaiwords':{const pr=$('ap').value.trim();if(!pr)return;b.disabled=true;b.textContent='⏳ Making…';
    try{const out=await gemJSON(`Make a vocabulary list for English teachers. Request: "${pr}". Learning language: ${LG(SET.lang)[2]}. For each word give "w" (the word, lowercase unless a proper noun), "ipa" (British IPA, no slashes, stress marks and syllable dots), "m" (meaning in ${LG(SET.mt)[2]}, 1–3 words), "e" (ONE emoji that pictures it, or ""). Concrete, picturable words first. Return a JSON array of {"w","ipa","m","e"}.`);

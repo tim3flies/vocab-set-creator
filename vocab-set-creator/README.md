@@ -11,6 +11,7 @@ Make vocabulary sets and print them as worksheets. Static site (no server, no bu
 | `store.js` | Shared storage: IndexedDB `bokogo-vocab` / store `sets` (same origin, so both pages see the same sets) |
 | `ws-sets.js` | Loads the chosen set into the worksheet page (`?set=ID`, else the last set opened) + topic picker |
 | `emoji.js` | ~640 common words → emoji (picture fallback without AI) |
+| `cutter.js` | 🧩 Clipart sheet cutter (from Bingo Maker v17–v35): one picture with many cliparts → transparent pictures, words read from the captions |
 
 ## A vocab set
 ```json
@@ -28,6 +29,7 @@ Make vocabulary sets and print them as worksheets. Static site (no server, no bu
 
 ## Creator features
 - Words: type / paste many lines (`word | meaning | ipa`, Excel columns ok) / AI word list from a prompt / drop pictures (file name = word).
+- 🧩 Cut picture sheet: upload one picture with many cliparts → auto-cut into a grid (or along drawn grid lines / a saved 📐 template you can drag and save), captions removed, background made transparent (white inside the picture kept, thin white border). The word under each picture is read with free in-browser OCR (Tesseract.js, loaded from jsDelivr the first time) and put in its name box. Tick the pictures to keep → green = matches a word in the set (gets the picture), orange = new word (added, then auto-filled). Options: add new words, replace existing pictures. ⬇ ZIP of transparent PNGs.
 - ✨ Auto-fill: IPA, meaning, emoji. With a Gemini key → Gemini. Without → dictionaryapi.dev (IPA), MyMemory (meaning), built-in emoji.
 - Pictures: emoji search, upload, camera, paste, 🎨 AI picture (6 styles). Images are resized to 384 px WebP.
 - Sentences / Talk / Stories tabs with format help, live preview (set words highlighted, IPA, missing meanings), ✨ AI make-from-words.
