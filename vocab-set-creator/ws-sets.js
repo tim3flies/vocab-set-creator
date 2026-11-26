@@ -15,8 +15,8 @@ function useSet(v){
  window.VSET_STOIMG=(v.stories||[]).map(x=>x&&x.pic&&x.pic.img||'');
  const sen=VS.lines(v.sen),dlg=VS.lines(v.dlg),mtTh=v.mt==='th';
  // No sentences / dialogues yet → simple ones made from the words, so every quiz type still prints this topic
- window.VSET_SEN=sen.length?sen.join('\n'):v.words.slice(0,12).map(w=>`This is ${art(w.w)} [${w.w}]. | ${w.m?(mtTh?'นี่คือ'+w.m:w.m):''}`).join('\n');
- window.VSET_DLG=dlg.length?dlg.join('\n'):v.words.slice(0,10).map(w=>`What is this? | It is ${art(w.w)} ${w.w}.`).join('\n');
+ window.VSET_SEN=sen.length?sen.join('\n'):v.words.slice(0,12).map(w=>`This is ${art(w.w.toLowerCase())} [${w.w.toLowerCase()}]. | ${w.m?(mtTh?'นี่คือ'+w.m:w.m):''}`).join('\n');
+ window.VSET_DLG=dlg.length?dlg.join('\n'):v.words.slice(0,10).map(w=>`What is this? | It is ${art(w.w.toLowerCase())} ${w.w.toLowerCase()}.`).join('\n');
  window.VSET_AUTO={sen:!sen.length,dlg:!dlg.length,sto:!(v.sto&&v.sto.trim())};
 }
 

@@ -26,7 +26,10 @@ function tx(mode,fn){return db().then(d=>new Promise((ok,no)=>{const t=d.transac
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const allL=()=>tx('readonly',s=>s.getAll()).then(a=>(a||[]).sort((x,y)=>(y.updated||0)-(x.updated||0)));
 const getL=id=>tx('readonly',s=>s.get(id));
-const putL=set=>tx('readwrite',s=>s.put(set));
+// Nana 27 Nov: every vocab word is kept as Abc (first letter capital, rest small), whatever was typed or read from a picture
+const capW=w=>{const l=String(w==null?'':w).trim().toLowerCase();return l.charAt(0).toUpperCase()+l.slice(1)};
+const capSet=set=>{if(set&&Array.isArray(set.words))set.words.forEach(w=>{if(w&&typeof w.w==='string')w.w=capW(w.w)});return set};
+const putL=set=>tx('readwrite',s=>s.put(capSet(set)));
 const delL=id=>tx('readwrite',s=>s.delete(id));
 
 /* ☁️ Cloud sync with english.learn8.co (optional; works offline without it).
@@ -104,7 +107,7 @@ function dlgWrongs(q,a,given,others,i,vocab){const A=String(a||'').trim(),low=x=
  const pool=(others||[]).map(o=>typeof o==='object'?o.a:o);(given||[]).forEach(add);add(swapWord(q,A,vocab,pool,(i||0)));add(swapWord(q,A,vocab,pool,(i||0)+3));add(flip(A));
  const qt=qType(q),same=(others||[]).filter(o=>typeof o==='object'?qType(o.q)===qt:false).map(o=>o.a);same.forEach(add);(others||[]).map(o=>typeof o==='object'?o.a:o).forEach(add);return out}
 const dlgParse=l=>{const p=String(l||'').split('|').map(x=>x.trim());return {q:p[0]||'',a:p[1]||'',wr:p.slice(2).filter(Boolean)}};
-window.VS={
+window.VS={capW,capSet,
  dlgWrongs,dlgParse,
  uid,
  all:()=>C.first().then(()=>allL()),

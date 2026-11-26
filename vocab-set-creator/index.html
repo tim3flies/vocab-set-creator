@@ -454,7 +454,7 @@ function renderLib(){libTabs();if(LTAB==='all')return renderAll();const g=$('gri
  g.innerHTML=SETS.map(s=>{const c=counts(s);return`<div class="vcard" data-open="${s.id}" role="button" tabindex="0"><div class="vc1"><div class="ic">${esc(s.icon||'📚')}</div><div style="min-width:0;flex:1"><b>${esc(s.name)}</b><div class="cnt"><span>🖼️ ${c.w}</span><span>📝 ${c.s}</span><span>💬 ${c.d}</span><span>📖 ${c.t}</span></div></div></div><div class="strip">${s.words.slice(0,8).map(w=>`<span>${w.img?`<img src="${w.img}" alt="">`:esc(w.e||'·')}</span>`).join('')}</div><div class="vca"><button class="ib" data-open="${s.id}">✏️ <span class="lb">Edit</span></button><a class="ib pri" href="worksheets.html?set=${s.id}" style="text-decoration:none" data-cur="${s.id}">🖨️ <span class="lb">Print</span></a></div></div>`}).join('')}
 
 /* =================== EDITOR =================== */
-async function openSet(id){const s=await VS.get(id);if(!s){toast('Set not found');return showLib()}SET=s;['words','sen','dlg','sto'].forEach(k=>{if(SET[k]==null)SET[k]=k==='words'?[]:''});SET.ipa=SET.ipa||{};STO.prep(SET);VS.cur.set(id);
+async function openSet(id){const s=await VS.get(id);if(!s){toast('Set not found');return showLib()}SET=VS.capSet(s);['words','sen','dlg','sto'].forEach(k=>{if(SET[k]==null)SET[k]=k==='words'?[]:''});SET.ipa=SET.ipa||{};STO.prep(SET);VS.cur.set(id);
  $('vLib').hidden=true;$('vEd').hidden=false;history.replaceState(null,'','?set='+id);renderEd();saveUI('saved');scrollTo(0,0)}
 function renderEd(){document.title=SET.name+' · Vocab Sets';$('edIcon').innerHTML=`<span class="bigemo">${esc(SET.icon||'📚')}</span>`;const n=$('edName');if(document.activeElement!==n)n.value=SET.name;$('edPrint').href='worksheets.html?set='+SET.id;renderTabs();renderSide();renderPane()}
 function renderTabs(){const c=counts(SET);$('tabs').innerHTML=[['w','🖼️','Words',c.w],['s','📝','Sentences',c.s],['d','💬','Talk',c.d],['t','📖','Stories',c.t]].map(t=>`<button class="${TAB===t[0]?'on':''}" data-tab="${t[0]}"><span class="e">${t[1]}</span>${t[2]} <span class="n">${t[3]}</span></button>`).join('')}
@@ -496,7 +496,7 @@ function renderPv(){const pv=$('pv');if(!pv)return;
 /* ---------- words ---------- */
 function parseLines(txt){return String(txt).split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>{let p=l.includes('|')?l.split('|'):l.includes('\t')?l.split('\t'):[l];p=p.map(x=>x.trim());return{w:p[0].replace(/^\d+[.)]\s*/,''),m:p[1]||'',ipa:(p[2]||'').replace(/^\/|\/$/g,'')}}).filter(x=>x.w)}
 function addWords(list,silent){const have=new Set(SET.words.map(w=>w.w.toLowerCase()));let n=0,skip=0;const first=SET.words.length;
- list.forEach(x=>{const k=x.w.toLowerCase();if(have.has(k)){skip++;return}have.add(k);SET.words.push({id:VS.uid(),w:x.w,ipa:x.ipa||'',m:x.m||'',e:x.e||emoFor(x.w),img:x.img||''});n++});
+ list.forEach(x=>{const k=x.w.toLowerCase();if(have.has(k)){skip++;return}have.add(k);SET.words.push({id:VS.uid(),w:VS.capW(x.w),ipa:x.ipa||'',m:x.m||'',e:x.e||emoFor(x.w),img:x.img||''});n++});
  if(SET.icon==='📚'&&SET.words[0]&&SET.words[0].e)SET.icon=SET.words[0].e;
  save();renderEd();const rows=document.querySelectorAll('#wl .wr');for(let i=first;i<rows.length;i++)rows[i].classList.add('new');
  if(rows[rows.length-1]&&n)rows[rows.length-1].scrollIntoView({block:'nearest',behavior:'smooth'});
@@ -766,7 +766,7 @@ addEventListener('vs-cloud',async e=>{const d=e.detail||{};cloudUI(d);if(d.synce
  if(d.signedOut)toast('☁️ Please sign in again');
  if(d.pushed&&SET&&SET.id===d.pushed.id){const m=new Map((d.pushed.words||[]).map(w=>[w.id,w.img]));for(const w of SET.words){const u=m.get(w.id);if(u&&/^data:/.test(w.img||'')&&/^https:/.test(u))w.img=u}}
  if(d.changed){if(!$('vLib').hidden){SETS=await VS.all();renderLib()}
-  else if(SET&&d.changed.includes(SET.id)&&!saveT){const s=await VS.get(SET.id);if(s){SET=s;['words','sen','dlg','sto'].forEach(k=>{if(SET[k]==null)SET[k]=k==='words'?[]:''});SET.ipa=SET.ipa||{};STO.prep(SET);if(!$('sheet').classList.contains('on'))renderEd()}else showLib()}}});
+  else if(SET&&d.changed.includes(SET.id)&&!saveT){const s=await VS.get(SET.id);if(s){SET=VS.capSet(s);['words','sen','dlg','sto'].forEach(k=>{if(SET[k]==null)SET[k]=k==='words'?[]:''});SET.ipa=SET.ipa||{};STO.prep(SET);if(!$('sheet').classList.contains('on'))renderEd()}else showLib()}}});
 document.addEventListener('click',async e=>{const t=e.target;
  const op=t.closest('[data-open]');if(op&&!t.closest('a')){openSet(op.dataset.open);return}
  const cur=t.closest('[data-cur]');if(cur){VS.cur.set(cur.dataset.cur);return}
@@ -834,6 +834,7 @@ document.addEventListener('click',async e=>{const t=e.target;
   default:if(a.startsWith('st-'))await STO.click(a,b);
  }});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet();if((e.key==='Enter'||e.key===' ')&&e.target.classList?.contains('vcard')){e.preventDefault();openSet(e.target.dataset.open)}});
+document.addEventListener('change',e=>{const t=e.target;if(SET&&t.dataset&&t.dataset.k==='w'&&t.closest('.wr')){const v=VS.capW(t.value);if(v!==t.value){t.value=v;const w=SET.words[+t.closest('.wr').dataset.i];if(w){w.w=v;save()}}}});
 document.addEventListener('input',e=>{const t=e.target;if(!SET)return;if(STO.input(t))return;
  if(t.id==='edName'){SET.name=t.value;save();document.title=SET.name+' · Vocab Sets';return}
  const row=t.closest('.wr');if(row&&t.dataset.k){const w=SET.words[+row.dataset.i];w[t.dataset.k]=t.dataset.k==='ipa'?t.value.replace(/\//g,''):t.value;if(t.dataset.k!=='w')t.closest('.fx')?.classList.toggle('miss',!t.value);save();return}
